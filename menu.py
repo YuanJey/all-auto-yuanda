@@ -24,6 +24,7 @@ if __name__ == '__main__':
         print("===============================================")
         # 提示用户选择操作
         choice = input(
+            "0.导入商城账号\n"
             "1.设置核销账号\n"
             "2.获取核销账号信息\n"
             "3.新增商城账号\n"
@@ -32,6 +33,21 @@ if __name__ == '__main__':
             "其他任意键退出..."
             "\n"
         )
+        if choice == "0":
+            accounts = []  # ✅ 改成 list 而不是 tuple
+            with open('accounts.txt', 'r', encoding='utf-8') as file:
+                for line in file:
+                    line = line.strip()
+                    if not line:
+                        continue  # 跳过空行
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        sc_account = parts[0]
+                        sc_password = parts[1]
+                        accounts.append((sc_account, sc_password))  # ✅ 使用 append 添加元素
+
+            database.batch_insert_account(accounts)
+            continue
         if choice == "1":
             init_account()
             continue
