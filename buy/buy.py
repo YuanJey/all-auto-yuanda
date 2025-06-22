@@ -82,29 +82,29 @@ class  Buy:
             url = self.m_2000
         try:
             self.driver.get(url)
-            buy_button = WebDriverWait(self.driver, 1).until(
+            buy_button = WebDriverWait(self.driver, 5).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.cart-buy > a.buy-btn'))
             )
             # 使用JavaScript点击
             self.driver.execute_script("arguments[0].click();", buy_button)
 
             # 找“找人代付”并点击
-            pay_button = WebDriverWait(self.driver, 1).until(
+            pay_button = WebDriverWait(self.driver, 5).until(
                 EC.element_to_be_clickable((By.ID, 'alipay'))
             )
             self.driver.execute_script("arguments[0].click();", pay_button)
 
             # 点击结算按钮
-            submit_btn = WebDriverWait(self.driver, 1).until(
+            submit_btn = WebDriverWait(self.driver, 5).until(
                 EC.element_to_be_clickable((By.ID, 'jiesuan'))
             )
             # 使用JavaScript点击
             self.driver.execute_script("arguments[0].click();", submit_btn)
 
-            success_message = WebDriverWait(self.driver, 5).until(
-                EC.presence_of_element_located((By.ID, 'zhengwen'))
-            )
-            message_text = success_message.text
-            print("成功信息：", message_text,number, "面额购买成功+1")
+            # success_message = WebDriverWait(self.driver, 5).until(
+            #     EC.presence_of_element_located((By.ID, 'zhengwen'))
+            # )
+            # message_text = success_message.text
+            # print("成功信息：", message_text,number, "面额购买成功+1")
         except Exception as e:
             print(f"操作失败：{e}", "金额:", number)
