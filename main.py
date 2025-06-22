@@ -22,6 +22,7 @@ BLOCK_SIZE = 16  # AES block size
 db_file = 'accounts.db'  # 提前准备好数据库文件路径
 hx_driver = webdriver.Chrome()
 db = Database(db_file)
+last_sc_account=db.get_last_sc_account()
 def aes_encrypt(plaintext: str) -> str:
     cipher = AES.new(KEY, AES.MODE_ECB)
     ciphertext = cipher.encrypt(pad(plaintext.encode('utf-8'), BLOCK_SIZE))
@@ -36,23 +37,23 @@ class Transfer:
     def transfer(self,account,money):
         self.driver.get(self.url)
         # 等待元素出现（最多等待10秒）
-        account_input = WebDriverWait(self.driver, 60).until(
+        account_input = WebDriverWait(self.driver, 120).until(
             EC.presence_of_element_located((By.ID, 'account'))
         )
         account_input.clear()
         account_input.send_keys(account)
-        money_input = WebDriverWait(self.driver, 60).until(
+        money_input = WebDriverWait(self.driver, 120).until(
             EC.presence_of_element_located((By.ID, 'money'))
         )
         money_input.clear()
         money_input.send_keys(str(money))
 
-        passwd_input = WebDriverWait(self.driver, 60).until(
+        passwd_input = WebDriverWait(self.driver, 120).until(
             EC.presence_of_element_located((By.ID, 'passwd'))
         )
         passwd_input.clear()
         passwd_input.send_keys(str(money))
-        wait = WebDriverWait(self.driver, 60)
+        wait = WebDriverWait(self.driver, 120)
         confirm_button = wait.until(
             EC.element_to_be_clickable((By.XPATH, '//div[@class="apply-footer-btn " and text()="确认转账"]'))
         )
@@ -103,8 +104,11 @@ def process_account(sc_account, date):
             buy = Buy(driver)
             balance = user.get_balance()
             if balance >= 30000:
-                print("余额大于等于配置金额,即将开始执行。")
+                print("余额大于等于配置金额,开始执行。")
                 buy.start()
+            elif last_sc_account == sc_account.account:
+                print("最后一个账号,金额："+balance+" 开始执行。")
+                buy.start2(balance)
             else:
                 print("余额小于配置金额,请手动充值。")
             # while True:
@@ -127,19 +131,20 @@ def process_account(sc_account, date):
 def hx_login(account, password):
     hx_driver.get("https://hx.yuanda.biz/Home/Public/loginbox/type/2")
     # 等待输入框出现并输入手机号,password
-    phone_input = WebDriverWait(hx_driver, 60).until(
+    phone_input = WebDriverWait(hx_driver, 120).until(
         EC.presence_of_element_located((By.ID, "phone"))
     )
     phone_input.send_keys(account)
-    password_input = WebDriverWait(hx_driver, 60).until(
+    password_input = WebDriverWait(hx_driver, 120).until(
         EC.presence_of_element_located((By.ID, "password"))
     )
     password_input.send_keys(password)
-    login_button = WebDriverWait(hx_driver, 60).until(
+    login_button = WebDriverWait(hx_driver, 120).until(
         EC.element_to_be_clickable((By.ID, "login"))
     )
     login_button.click()
     input("完成后输入回车键：")
+    hx_driver.get("https://hx.yuanda.biz")
 def hx(path,file):
     order = Order()
     verification = Verification(hx_driver)
@@ -155,9 +160,12 @@ def to_money(sc_account, balance):
     transfer = Transfer(hx_driver, hx_account.password)
     print("商城账户：", sc_account.account, "余额：", balance)
     all_money = transfer.get_available_transfer_money()
-    to_money = 30000 - balance
-    if all_money > to_money:
-        transfer.transfer2(sc_account.account, to_money)
+    to_sc_account_money = 30000 - balance
+    if all_money > to_sc_account_money:
+        transfer.transfer2(sc_account.account, to_sc_account_money)
+    elif last_sc_account==sc_account.account:
+        rounded_money = (all_money // 100) * 100
+        transfer.transfer2(sc_account.account, rounded_money)
     else:
         print(
             f"账户余额不足 可转账金额 {all_money} 小于配置金额 {30000 - balance}，请手动充值。")

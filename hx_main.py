@@ -7,21 +7,21 @@ from selenium import webdriver
 
 from verification.verification import Verification
 def login(driver,account, password):
-    # login_button = WebDriverWait(driver, 60).until(
+    # login_button = WebDriverWait(driver, 120).until(
     #     EC.element_to_be_clickable((By.XPATH, '//button[@class="btn_login loginbox"]'))
     # )
     # login_button.click()
     driver.get("https://hx.yuanda.biz/Home/Public/loginbox/type/2")
     # 等待输入框出现并输入手机号,password
-    phone_input = WebDriverWait(driver, 60).until(
+    phone_input = WebDriverWait(driver, 120).until(
         EC.presence_of_element_located((By.ID, "phone"))
     )
     phone_input.send_keys(account)
-    password_input = WebDriverWait(driver, 60).until(
+    password_input = WebDriverWait(driver, 120).until(
         EC.presence_of_element_located((By.ID, "password"))
     )
     password_input.send_keys(password)
-    login_button = WebDriverWait(driver, 60).until(
+    login_button = WebDriverWait(driver, 120).until(
         EC.element_to_be_clickable((By.ID, "login"))
     )
     login_button.click()

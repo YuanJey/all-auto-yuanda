@@ -85,6 +85,12 @@ if __name__ == '__main__':
                     all_money+=account.fail_money
             print("总失败金额：", all_money)
             continue
+        if choice == "7":
+            account=database.get_last_sc_account()
+            if account:
+                print("最后添加的商城账号：", account.account, "密码：", account.password)
+            else:
+                print("没有商城账号信息。")
         else:
             print("程序已退出。")
             break

@@ -81,6 +81,13 @@ class Database:
         rows = self.cursor.fetchall()
         accounts = [SCAccount(*row) for row in rows]
         return accounts
+
+    def get_last_sc_account(self):
+        self.cursor.execute('SELECT * FROM sc_accounts ORDER BY account DESC LIMIT 1')
+        row = self.cursor.fetchone()
+        if row:
+            return SCAccount(*row)
+        return None
     def get_login_sc_account(self):
         self.cursor.execute('SELECT * FROM sc_accounts WHERE login=1  ORDER BY account ASC')
         rows = self.cursor.fetchall()
