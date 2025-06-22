@@ -34,17 +34,17 @@ if __name__ == '__main__':
             "\n"
         )
         if choice == "0":
-            accounts = []  # ✅ 改成 list 而不是 tuple
+            accounts = []
             with open('accounts.txt', 'r', encoding='utf-8') as file:
                 for line in file:
                     line = line.strip()
                     if not line:
-                        continue  # 跳过空行
+                        continue
                     parts = line.split()
                     if len(parts) >= 2:
-                        sc_account = parts[0]
-                        sc_password = parts[1]
-                        accounts.append((sc_account, sc_password))  # ✅ 使用 append 添加元素
+                        accounts.append((parts[0], parts[1]))
+
+            print(f"共读取了{len(accounts)}行账号信息")
 
             database.batch_insert_account(accounts)
             continue

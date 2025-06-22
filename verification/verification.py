@@ -61,7 +61,6 @@ class Verification:
 
     def save_fail_summary(self):
         """将卡密核销成功次数保存到文件"""
-        print("\n=== 卡密核销成功统计 ===")
         # 获取前一天日期作为文件名
         previous_day = datetime.now().date() - timedelta(days=1)
         filename = f"{previous_day}_fail_order.txt"
