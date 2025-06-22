@@ -23,6 +23,7 @@ db_file = 'accounts.db'  # 提前准备好数据库文件路径
 hx_driver = webdriver.Chrome()
 db = Database(db_file)
 last_sc_account=db.get_last_sc_account()
+fail_money_map = {}
 def aes_encrypt(plaintext: str) -> str:
     cipher = AES.new(KEY, AES.MODE_ECB)
     ciphertext = cipher.encrypt(pad(plaintext.encode('utf-8'), BLOCK_SIZE))
@@ -100,6 +101,7 @@ def process_account(sc_account, date):
             hx(date, sc_account.account)
             balance = user.get_balance()
             # db.insert_fail_summary(sc_account.account, balance)
+            fail_money_map[sc_account.account]= balance
             to_money(sc_account, balance)
             buy = Buy(driver)
             balance = user.get_balance()
@@ -165,7 +167,8 @@ def to_money(sc_account, balance):
         transfer.transfer2(sc_account.account, to_sc_account_money)
     elif last_sc_account==sc_account.account:
         rounded_money = (all_money // 100) * 100
-        transfer.transfer2(sc_account.account, rounded_money)
+        if rounded_money>=100:
+            transfer.transfer2(sc_account.account, rounded_money)
     else:
         print(
             f"账户余额不足 可转账金额 {all_money} 小于配置金额 {30000 - balance}，请手动充值。")
@@ -210,3 +213,5 @@ if __name__ == '__main__':
                 future.result()
             except Exception as e:
                 print(f"发生异常: {e}")
+    for account, fild_money in fail_money_map.items():
+        db.insert_fail_summary(account, fild_money)
