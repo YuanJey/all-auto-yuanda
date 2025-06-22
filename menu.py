@@ -24,13 +24,13 @@ if __name__ == '__main__':
         print("===============================================")
         # 提示用户选择操作
         choice = input(
-            "0.导入商城账号\n"
-            "1.设置核销账号\n"
-            "2.获取核销账号信息\n"
-            "3.新增商城账号\n"
-            "4.删除商城账号\n"
-            "5.查看商城账号\n"
-            "6.查询失败金额\n"
+            "[0].导入商城账号\n"
+            "[1].查看商城账号\n"
+            "[2].新增商城账号\n"
+            "[3].删除商城账号\n"
+            "[4].设置核销账号\n"
+            "[5].获取核销账号信息\n"
+            "[6].查询失败金额\n"
             "其他任意键退出..."
             "\n"
         )
@@ -50,23 +50,6 @@ if __name__ == '__main__':
             database.batch_insert_account(accounts)
             continue
         if choice == "1":
-            init_account()
-            continue
-        if choice == "2":
-            account = database.get_hx_account()
-            print("当前核销账号信息：", account.account, account.password)
-            continue
-        if choice == "3":
-            account = input("请输入商城账号：")
-            password = input("请输入商城密码：")
-            accounts= [(account, password)]
-            database.batch_insert_account(accounts)
-            continue
-        if choice == "4":
-            account = input("请输入要删除的商城账号：")
-            database.del_account(account)
-            continue
-        if choice == "5":
             accounts = database.get_all_sc_account()
             if not accounts:
                 print("没有商城账号信息。")
@@ -74,6 +57,29 @@ if __name__ == '__main__':
                 for account in accounts:
                     print("账号：", account.account, "密码：", account.password)
             continue
+        if choice == "2":
+            account = input("请输入商城账号：")
+            password = input("请输入商城密码：")
+            accounts= [(account, password)]
+            database.batch_insert_account(accounts)
+            continue
+        if choice == "3":
+            account = input("请输入要删除的商城账号：")
+            database.del_account(account)
+            continue
+
+
+        if choice == "4":
+            init_account()
+            continue
+
+        if choice == "5":
+            account = database.get_hx_account()
+            print("当前核销账号信息：", account.account, account.password)
+            continue
+
+
+
         if choice == "6":
             day = input("请输入日期：")
             fild_money=database.get_fail_summary( day)
