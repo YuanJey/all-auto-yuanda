@@ -46,7 +46,9 @@ class Captcha:
                 'key': self.api_key,
                 'method': 'base64',
                 'body': base64_image,
-                'json': 1
+                'json': 1,
+                'min_length': 4,
+                'max_length': 4
             }
             response = requests.post(
                 'https://2captcha.com/in.php',
