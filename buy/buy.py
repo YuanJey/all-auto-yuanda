@@ -7,9 +7,14 @@ class  Buy:
         self.driver = driver
         self.num100 = 20
         self.num200 = 10
-        self.num500 = 16
-        self.num1000 = 16
-        self.num2000 = 1
+        self.num500 = 12
+        self.num1000 = 12
+        self.num2000 = 4
+        # self.num100 = 20
+        # self.num200 = 10
+        # self.num500 = 16
+        # self.num1000 = 16
+        # self.num2000 = 1
         self.amount=  self.num100*100+self.num200*200+self.num500*500+self.num1000*1000+self.num2000*2000
         self.m_100 = 'https://sc.yuanda.biz/pg/234.html'
         self.m_200 = 'https://sc.yuanda.biz/pg/235.html'
@@ -55,10 +60,17 @@ class  Buy:
             print(f"⚠️ 输入金额 {money} 非 100 的整数倍，已自动调整为：{rounded_money}")
 
         # 定义面额和对应的数量限制
+        # denominations = [
+        #     (2000, 1),
+        #     (1000, 16),
+        #     (500, 16),
+        #     (200, 10),
+        #     (100, 20)
+        # ]
         denominations = [
-            (2000, 1),
-            (1000, 16),
-            (500, 16),
+            (2000, 4),
+            (1000, 12),
+            (500, 12),
             (200, 10),
             (100, 20)
         ]
@@ -151,25 +163,25 @@ class  Buy:
         try:
             self.driver.get(url)
             # 等待购买按钮并点击
-            buy_button = WebDriverWait(self.driver, 10).until(
+            buy_button = WebDriverWait(self.driver, 5).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.cart-buy > a.buy-btn'))
             )
             self.driver.execute_script("arguments[0].click();", buy_button)
 
             # 等待支付按钮并点击
-            pay_button = WebDriverWait(self.driver, 10).until(
+            pay_button = WebDriverWait(self.driver, 5).until(
                 EC.element_to_be_clickable((By.ID, 'alipay'))
             )
             self.driver.execute_script("arguments[0].click();", pay_button)
 
             # 等待结算按钮并点击
-            submit_btn = WebDriverWait(self.driver, 10).until(
+            submit_btn = WebDriverWait(self.driver, 5).until(
                 EC.element_to_be_clickable((By.ID, 'jiesuan'))
             )
             self.driver.execute_script("arguments[0].click();", submit_btn)
 
             # 检查是否进入成功页面
-            success_message = WebDriverWait(self.driver, 10).until(
+            success_message = WebDriverWait(self.driver, 5).until(
                 EC.presence_of_element_located((By.ID, 'zhengwen'))
             )
             success_text = success_message.text
