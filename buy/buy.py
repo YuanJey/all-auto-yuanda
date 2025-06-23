@@ -38,9 +38,20 @@ class  Buy:
             self.handle(2000)
 
     def start2(self, money):
-        if money % 100 != 0:
-            print("金额必须是 100 的倍数")
+        """
+        根据指定金额尝试下单，优先使用大面额，支持向下取整至最近的 100 整数倍。
+
+        :param money: 目标金额（可为任意整数）
+        :return: None
+        """
+        if money < 100:
+            print("金额太小，无法下单")
             return
+
+        # 自动向下取整到最近的 100 的整数倍
+        rounded_money = (money // 100) * 100
+        if rounded_money != money:
+            print(f"⚠️ 输入金额 {money} 非 100 的整数倍，已自动调整为：{rounded_money}")
 
         # 定义面额和对应的数量限制
         denominations = [
@@ -52,15 +63,16 @@ class  Buy:
         ]
 
         # 如果金额正好是 30000，使用固定策略
-        if money == 30000:
+        if rounded_money == 30000:
             self.start()
             return
-        remaining = money
+
+        remaining = rounded_money
 
         for amount, limit in denominations:
             count = min(remaining // amount, limit)
             for _ in range(count):
-                self.handle(amount)
+                self.handle2(amount)
             remaining -= count * amount
             if remaining == 0:
                 break
@@ -68,9 +80,44 @@ class  Buy:
         if remaining != 0:
             print(f"无法完全消费金额，剩余: {remaining}")
 
-    def handle(self,number):
-        url= None
-        if  number == 100:
+    def start3(self, money):
+        """
+        根据指定金额尝试下单，优先使用大面额。
+
+        :param money: 目标金额（必须为 100 的倍数）
+        :return:
+            - True: 成功完成下单
+            - False: 发生未知错误
+            - None: 用户余额不足或订单已达限额（需手动处理）
+            - "limit_reached": 当日订单已达限额
+            - "insufficient_balance": 账户余额不足
+        """
+        if money % 100 != 0 or money <= 0:
+            print("金额必须是 100 的正整数倍")
+            return
+
+        # 按照面额从高到低排序
+        denominations = [
+            (2000, 1),
+            (1000, 16),
+            (500, 16),
+            (200, 10),
+            (100, 20)
+        ]
+
+        remaining = money
+        for amount, limit in denominations:
+            count = min(remaining // amount, limit)
+            for _ in range(count):
+                try:
+                    self.handle2(amount)
+                except Exception as e:
+                    print(f"执行 handle2({amount}) 时发生异常: {e}")
+                    continue  # 或者 break，取决于是否要中断整个流程
+
+    def handle(self, number):
+        url = None
+        if number == 100:
             url = self.m_100
         elif number == 200:
             url = self.m_200
@@ -105,6 +152,63 @@ class  Buy:
                 EC.presence_of_element_located((By.ID, 'zhengwen'))
             )
             message_text = success_message.text
-            print("成功信息：", message_text,number, "面额购买成功+1")
+            print("成功信息：", message_text, number, "面额购买成功+1")
         except Exception as e:
             print(f"操作失败：{e}", "金额:", number)
+
+    def handle2(self, number):
+        url = None
+        if number == 100:
+            url = self.m_100
+        elif number == 200:
+            url = self.m_200
+        elif number == 500:
+            url = self.m_500
+        elif number == 1000:
+            url = self.m_1000
+        elif number == 2000:
+            url = self.m_2000
+        else:
+            print(f"不支持的面额: {number}")
+            return None
+
+        try:
+            self.driver.get(url)
+
+            # 等待购买按钮并点击
+            buy_button = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.cart-buy > a.buy-btn'))
+            )
+            self.driver.execute_script("arguments[0].click();", buy_button)
+
+            # 等待支付按钮并点击
+            pay_button = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.ID, 'alipay'))
+            )
+            self.driver.execute_script("arguments[0].click();", pay_button)
+
+            # 等待结算按钮并点击
+            submit_btn = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.ID, 'jiesuan'))
+            )
+            self.driver.execute_script("arguments[0].click();", submit_btn)
+            success_message = WebDriverWait(self.driver, 5).until(
+                EC.presence_of_element_located((By.ID, 'zhengwen'))
+            )
+            message_text = success_message.text
+            if "订单生成成功" in message_text:
+                return 0
+            fild_message = WebDriverWait(self.driver, 5).until(
+                EC.presence_of_element_located((By.TAG_NAME, 'body'))
+            )
+            if "您今天的下单金额已超过三万" in fild_message.text:
+                print("提示：您今天的下单金额已超过三万，无法继续下单。")
+                return 1
+            elif "余额不足" in fild_message.text:
+                print("提示：当前账户余额不足，请先充值后再试。")
+                return -1  # 返回 -1 表示余额不足
+            else:
+                return None
+        except Exception as e:
+            print(f"操作失败：{e}，金额: {number}")
+            return None

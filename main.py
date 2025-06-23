@@ -1,3 +1,5 @@
+import time
+
 import requests
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -14,7 +16,6 @@ from datetime import datetime, timedelta
 from verification.verification import Verification
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
-from Crypto.Random import get_random_bytes
 import base64
 
 KEY = b'YourKey123456789'  # 必须是 16、24 或 32 字节长度
@@ -102,17 +103,22 @@ def process_account(sc_account, date):
             balance = user.get_balance()
             # db.insert_fail_summary(sc_account.account, balance)
             fail_money_map[sc_account.account]= balance
-            to_money(sc_account, balance)
+            to_money1(sc_account, balance)
             buy = Buy(driver)
             balance = user.get_balance()
-            if balance >= 30000:
-                print("余额大于等于配置金额,开始执行。")
-                buy.start()
-            elif last_sc_account.account == sc_account.account:
-                print(f"最后一个账号,金额：{balance} 开始执行。")
-                buy.start2(int(balance))
-            else:
-                print("余额小于配置金额,请手动充值。")
+            # buy.start2(int(balance))
+            buy.start2(30000)
+            # balance = user.get_balance()
+            # if balance >= 30000:
+            #     print(f"{sc_account.account} 金额：{balance},开始执行。")
+            #     buy.start()
+            # elif last_sc_account.account == sc_account.account:
+            #     print(f"最后一个账号 {sc_account.account},金额：{balance} 开始执行。")
+            #     buy.start2(int(balance))
+            # else:
+            #     print("余额小于配置金额,请手动充值。")
+
+
             # while True:
             #     balance = user.get_balance()
             #     # local_db.get_transfed_accounts()
@@ -172,6 +178,61 @@ def to_money(sc_account, balance):
     else:
         print(
             f"账户余额不足 可转账金额 {all_money} 小于配置金额 {30000 - balance}，请手动充值。")
+
+
+def to_money1(sc_account, balance):
+    """
+    向商城账号充值至 30000 元，最多转不超过可转账额度的最大 100 的整数倍金额。
+
+    :param sc_account: 商城账号对象
+    :param balance: 当前余额（float 或 int）
+    :return: bool - 是否成功完成转账
+    """
+    transfer = Transfer(hx_driver, hx_account.password)
+    print(f"【开始转账】商城账户：{sc_account.account}，当前余额：{balance}")
+
+    all_money = transfer.get_available_transfer_money()
+    required = max(0, 30000 - balance)
+
+    if all_money >= required:
+        print(f"✅ 可转账金额 {all_money} ≥ 需要金额 {required}，全额转账 {required}")
+        return transfer.transfer2(sc_account.account, required)
+    else:
+        rounded_money = (all_money // 100) * 100
+        if rounded_money >= 100:
+            return transfer.transfer2(sc_account.account, rounded_money)
+        else:
+            print("❌ 可转账金额不足 100，跳过。")
+            return False
+
+
+def to_money2(sc_account, balance):
+    transfer = Transfer(hx_driver, hx_account.password)
+    print("商城账户：", sc_account.account, "余额：", balance)
+    wait_timeout = 60 * 10  # 最大等待时间（秒）
+    wait_interval = 20  # 检查间隔（秒）
+
+    start_time = time.time()
+    while True:
+        all_money = transfer.get_available_transfer_money()
+        to_sc_account_money = 30000 - balance
+
+        if all_money > to_sc_account_money:
+            transfer.transfer2(sc_account.account, to_sc_account_money)
+            break
+        elif last_sc_account.account == sc_account.account:
+            rounded_money = (all_money // 100) * 100
+            if rounded_money >= 100:
+                transfer.transfer2(sc_account.account, rounded_money)
+            break
+        else:
+            print(
+                f"账户余额不足 可转账金额 {all_money} 小于配置金额 {30000 - balance}，等待核销充值...")
+            if time.time() - start_time > wait_timeout:
+                print(f"等待超时，未满足转账条件: {sc_account.account}")
+                break
+            time.sleep(wait_interval)
+
 if __name__ == '__main__':
     enc = input("请输入授权码：")
     hx_account=db.get_hx_account()
