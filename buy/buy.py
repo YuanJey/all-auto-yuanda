@@ -7,9 +7,9 @@ class  Buy:
         self.driver = driver
         self.num100 = 20
         self.num200 = 10
-        self.num500 = 12
-        self.num1000 = 12
-        self.num2000 = 4
+        self.num500 = 16
+        self.num1000 = 16
+        self.num2000 = 1
         self.amount=  self.num100*100+self.num200*200+self.num500*500+self.num1000*1000+self.num2000*2000
         self.m_100 = 'https://sc.yuanda.biz/pg/234.html'
         self.m_200 = 'https://sc.yuanda.biz/pg/235.html'
@@ -44,9 +44,9 @@ class  Buy:
 
         # 定义面额和对应的数量限制
         denominations = [
-            (2000, 4),
-            (1000, 12),
-            (500, 12),
+            (2000, 1),
+            (1000, 16),
+            (500, 16),
             (200, 10),
             (100, 20)
         ]

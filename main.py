@@ -108,7 +108,7 @@ def process_account(sc_account, date):
             if balance >= 30000:
                 print("余额大于等于配置金额,开始执行。")
                 buy.start()
-            elif last_sc_account == sc_account.account:
+            elif last_sc_account.account == sc_account.account:
                 print("最后一个账号,金额："+balance+" 开始执行。")
                 buy.start2(balance)
             else:
@@ -165,7 +165,7 @@ def to_money(sc_account, balance):
     to_sc_account_money = 30000 - balance
     if all_money > to_sc_account_money:
         transfer.transfer2(sc_account.account, to_sc_account_money)
-    elif last_sc_account==sc_account.account:
+    elif last_sc_account.account==sc_account.account:
         rounded_money = (all_money // 100) * 100
         if rounded_money>=100:
             transfer.transfer2(sc_account.account, rounded_money)
