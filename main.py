@@ -104,7 +104,7 @@ def process_account(sc_account, date):
             hx(date, sc_account.account)
             balance = user.get_balance()
             fail_money_map[sc_account.account]= balance
-            to_money_lock(sc_account, balance)
+            to_money2(sc_account, balance)
             buy = Buy(driver)
             balance = user.get_balance()
             buy.start2(int(balance))
@@ -247,27 +247,27 @@ def to_money2(sc_account, balance):
     print("商城账户：", sc_account.account, "余额：", balance)
     wait_timeout = 60 * 10  # 最大等待时间（秒）
     wait_interval = 20  # 检查间隔（秒）
+    with global_transfer_lock:
+        start_time = time.time()
+        while True:
+            all_money = transfer.get_available_transfer_money()
+            to_sc_account_money = 30000 - balance
 
-    start_time = time.time()
-    while True:
-        all_money = transfer.get_available_transfer_money()
-        to_sc_account_money = 30000 - balance
-
-        if all_money > to_sc_account_money:
-            transfer.transfer2(sc_account.account, to_sc_account_money)
-            break
-        elif last_sc_account.account == sc_account.account:
-            rounded_money = (all_money // 100) * 100
-            if rounded_money >= 100:
-                transfer.transfer2(sc_account.account, rounded_money)
-            break
-        else:
-            print(
-                f"账户余额不足 可转账金额 {all_money} 小于配置金额 {30000 - balance}，等待核销充值...")
-            if time.time() - start_time > wait_timeout:
-                print(f"等待超时，未满足转账条件: {sc_account.account}")
+            if all_money > to_sc_account_money:
+                transfer.transfer2(sc_account.account, to_sc_account_money)
                 break
-            time.sleep(wait_interval)
+            elif last_sc_account.account == sc_account.account:
+                rounded_money = (all_money // 100) * 100
+                if rounded_money >= 100:
+                    transfer.transfer2(sc_account.account, rounded_money)
+                break
+            else:
+                print(
+                    f"账户余额不足 可转账金额 {all_money} 小于配置金额 {30000 - balance}，等待核销充值...")
+                if time.time() - start_time > wait_timeout:
+                    print(f"等待超时，未满足转账条件: {sc_account.account}")
+                    break
+                time.sleep(wait_interval)
 
 if __name__ == '__main__':
     enc = input("请输入授权码：")
