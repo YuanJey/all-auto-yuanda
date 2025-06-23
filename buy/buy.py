@@ -150,17 +150,6 @@ class  Buy:
 
         try:
             self.driver.get(url)
-            try:
-                layer = WebDriverWait(self.driver, 5).until(
-                    EC.presence_of_element_located((By.CLASS_NAME, 'layui-layer-content')),
-                    default=None
-                )
-                if layer and "余额不足" in layer.text:
-                    print(f"弹窗提示：{layer.text}")
-                    return -1
-            except:
-                pass
-
             # 等待购买按钮并点击
             buy_button = WebDriverWait(self.driver, 10).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.cart-buy > a.buy-btn'))

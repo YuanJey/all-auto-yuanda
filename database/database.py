@@ -44,6 +44,15 @@ class Database:
         ''')
         self.conn.commit()
 
+    def init_sc_accounts_state(self):
+        today = datetime.now().strftime("%Y-%m-%d")
+        self.cursor.execute('''
+                            DELETE
+                            FROM sc_accounts_state
+                            WHERE update_time < DATE(?)
+                            ''', (today,))
+        self.conn.commit()
+
     def insert_sc_account_state(self, account, state):
         now = datetime.now().strftime("%Y-%m-%d")
         self.cursor.execute('''

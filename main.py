@@ -102,13 +102,12 @@ def process_account(sc_account, date):
             user.download_order(date)
             hx(date, sc_account.account)
             balance = user.get_balance()
-            # db.insert_fail_summary(sc_account.account, balance)
             fail_money_map[sc_account.account]= balance
-            to_money1(sc_account, balance)
+            to_money2(sc_account, balance)
             buy = Buy(driver)
             balance = user.get_balance()
-            # buy.start2(int(balance))
-            buy.start2(20000)
+            buy.start2(int(balance))
+            # buy.start2(2000)
             sc_accounts_state[sc_account.account]=buy.state
             # balance = user.get_balance()
             # if balance >= 30000:
@@ -259,6 +258,7 @@ if __name__ == '__main__':
         # 格式化输出为字符串（格式为YYYY-MM-DD）
         date = previous_day.strftime("%Y-%m-%d")
 
+    db.init_sc_accounts_state()
     accounts = db.get_all_sc_account()
     hx_account=db.get_hx_account()
     hx_login(hx_account.account, hx_account.password)
