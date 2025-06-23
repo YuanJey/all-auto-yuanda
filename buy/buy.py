@@ -101,10 +101,10 @@ class  Buy:
             # 使用JavaScript点击
             self.driver.execute_script("arguments[0].click();", submit_btn)
 
-            # success_message = WebDriverWait(self.driver, 5).until(
-            #     EC.presence_of_element_located((By.ID, 'zhengwen'))
-            # )
-            # message_text = success_message.text
-            # print("成功信息：", message_text,number, "面额购买成功+1")
+            success_message = WebDriverWait(self.driver, 5).until(
+                EC.presence_of_element_located((By.ID, 'zhengwen'))
+            )
+            message_text = success_message.text
+            print("成功信息：", message_text,number, "面额购买成功+1")
         except Exception as e:
             print(f"操作失败：{e}", "金额:", number)

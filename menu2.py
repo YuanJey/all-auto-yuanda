@@ -61,16 +61,16 @@ def show_menu_with_arrow(selected_index):
 import os
 import platform
 
-def clear_screen():
-    # 使用 ANSI 控制符清屏（不会触发新终端窗口）
-    print('\033[H\033[J', end='')
 # def clear_screen():
-#     """跨平台清屏函数"""
-#     system_name = platform.system()
-#     if system_name == "Windows":
-#         os.system('cls')
-#     else:
-#         os.system('clear')
+#     # 使用 ANSI 控制符清屏（不会触发新终端窗口）
+#     print('\033[H\033[J', end='')
+def clear_screen():
+    """跨平台清屏函数"""
+    system_name = platform.system()
+    if system_name == "Windows":
+        os.system('cls')
+    else:
+        os.system('clear')
 
 
 def interactive_menu():
