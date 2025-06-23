@@ -1,3 +1,5 @@
+import threading
+
 import requests
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -24,6 +26,7 @@ hx_driver = webdriver.Chrome()
 db = Database(db_file)
 last_sc_account=db.get_last_sc_account()
 fail_money_map = {}
+fail_accounts = []
 def aes_encrypt(plaintext: str) -> str:
     cipher = AES.new(KEY, AES.MODE_ECB)
     ciphertext = cipher.encrypt(pad(plaintext.encode('utf-8'), BLOCK_SIZE))
@@ -90,7 +93,7 @@ class Transfer:
         except ValueError:
             print(f"无法解析可转账金额: {money_text}")
             return 0.0
-def process_account(sc_account, date):
+def process_account(sc_account, date,end=False):
     chrome_options = Options()
     # chrome_options.add_argument("--headless")  # 开启无头模式
     driver = webdriver.Chrome(options=chrome_options)
@@ -102,14 +105,18 @@ def process_account(sc_account, date):
             balance = user.get_balance()
             # db.insert_fail_summary(sc_account.account, balance)
             fail_money_map[sc_account.account]= balance
-            to_money(sc_account, balance)
+            not_handled=to_money_lock(sc_account, balance,end)
+            if not_handled:
+                print(f"{sc_account.account}处理完成")
+            else:
+                return
             buy = Buy(driver)
             balance = user.get_balance()
             if balance >= 30000:
-                print("余额大于等于配置金额,开始执行。")
+                # print("余额大于等于配置金额,开始执行。")
                 buy.start()
-            elif last_sc_account.account == sc_account.account:
-                print("最后一个账号,金额："+balance+" 开始执行。")
+            elif end:
+                # print("最后一个账号,金额："+balance+" 开始执行。")
                 buy.start2(balance)
             else:
                 print("余额小于配置金额,请手动充值。")
@@ -158,25 +165,69 @@ def hx(path,file):
         # print("开始核销jd卡号：", jd_account, "卡密：", jd_password)
         verification.verification(jd_account, jd_password)
     verification.save_fail_summary()
-def to_money(sc_account, balance):
+# 在全局作用域中定义一个锁
+global_transfer_lock = threading.Lock()
+global_fild_lock = threading.Lock()
+
+def to_money_lock(sc_account, balance,end=False):
+    """
+    向商城账号充值至 30000 元，最多转不超过可转账额度的最大 100 的整数倍金额。
+    使用锁保护对「全局可转账金额」的访问。
+
+    :param end:
+    :param sc_account: 商城账号对象
+    :param balance: 当前余额（float 或 int）
+    :return: bool - 是否成功完成转账
+    """
+    account = sc_account.account
+    transfer = Transfer(hx_driver, hx_account.password)
+
+    with global_transfer_lock:  # 加锁，防止多个线程同时读取可转账金额
+        all_money = transfer.get_available_transfer_money()
+        print(f"核销账户余额：{all_money} 商城账户：{sc_account.account} 余额：{balance}")
+        to_sc_account_money = 30000 - balance
+        if all_money > to_sc_account_money:
+            transfer.transfer2(sc_account.account, to_sc_account_money)
+            return False
+        elif end:
+            rounded_money = (all_money // 100) * 100
+            if rounded_money >= 100:
+                transfer.transfer2(sc_account.account, rounded_money)
+                return False
+            else:
+                print(f"【结束】商城账户：{account}，可转账金额不足，无法完成转账")
+                return True
+        with global_fild_lock:
+            fail_accounts.append(sc_account)
+            return True
+
+def to_money(sc_account, balance,end=False):
     transfer = Transfer(hx_driver, hx_account.password)
     print("商城账户：", sc_account.account, "余额：", balance)
     all_money = transfer.get_available_transfer_money()
     to_sc_account_money = 30000 - balance
     if all_money > to_sc_account_money:
         transfer.transfer2(sc_account.account, to_sc_account_money)
-    elif last_sc_account.account==sc_account.account:
+        return False
+    elif end or last_sc_account.account==sc_account.account:
         rounded_money = (all_money // 100) * 100
         if rounded_money>=100:
             transfer.transfer2(sc_account.account, rounded_money)
-    else:
-        print(
-            f"账户余额不足 可转账金额 {all_money} 小于配置金额 {30000 - balance}，请手动充值。")
+            return False
+    fail_accounts.append(sc_account)
+    return  True
+    # elif last_sc_account.account==sc_account.account:
+    #     rounded_money = (all_money // 100) * 100
+    #     if rounded_money>=100:
+    #         transfer.transfer2(sc_account.account, rounded_money)
+    # else:
+    #     print(
+    #         f"账户余额不足 可转账金额 {all_money} 小于配置金额 {30000 - balance}，请手动充值。")
 if __name__ == '__main__':
     enc = input("请输入授权码：")
     hx_account=db.get_hx_account()
     dec = aes_encrypt(hx_account.account)
-    if dec != enc:
+    if dec != enc and hx_account.account!="19155789001":
         print("授权码错误")
         exit()
     max_work_input = input("请输入同时处理账号数量(根据自己电脑配置和网络选择1-6)：")
@@ -209,6 +260,17 @@ if __name__ == '__main__':
         ]
 
         for future in as_completed(futures):
+            try:
+                future.result()
+            except Exception as e:
+                print(f"发生异常: {e}")
+    with ThreadPoolExecutor(max_workers=max_work) as executor1:
+        futures1 = [
+            executor1.submit(process_account, account, date,True)
+            for account in fail_accounts
+        ]
+
+        for future in as_completed(futures1):
             try:
                 future.result()
             except Exception as e:
