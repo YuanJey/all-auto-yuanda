@@ -1,3 +1,4 @@
+import threading
 import time
 
 import requests
@@ -103,7 +104,7 @@ def process_account(sc_account, date):
             hx(date, sc_account.account)
             balance = user.get_balance()
             fail_money_map[sc_account.account]= balance
-            to_money2(sc_account, balance)
+            to_money_lock(sc_account, balance)
             buy = Buy(driver)
             balance = user.get_balance()
             buy.start2(int(balance))
@@ -180,6 +181,40 @@ def to_money(sc_account, balance):
         print(
             f"账户余额不足 可转账金额 {all_money} 小于配置金额 {30000 - balance}，请手动充值。")
 
+# 在全局作用域中定义一个锁
+global_transfer_lock = threading.Lock()
+
+def to_money_lock(sc_account, balance):
+    """
+    向商城账号充值至 30000 元，最多转不超过可转账额度的最大 100 的整数倍金额。
+    使用锁保护对「全局可转账金额」的访问。
+
+    :param sc_account: 商城账号对象
+    :param balance: 当前余额（float 或 int）
+    :return: bool - 是否成功完成转账
+    """
+    account = sc_account.account
+    transfer = Transfer(hx_driver, hx_account.password)
+
+    print(f"【开始转账】商城账户：{account}，当前余额：{balance}")
+
+    with global_transfer_lock:  # 加锁，防止多个线程同时读取可转账金额
+        all_money = transfer.get_available_transfer_money()
+        required = max(0, 30000 - balance)
+
+        if all_money >= required:
+            print(f"✅ 可转账金额 {all_money} ≥ 需要金额 {required}，全额转账 {required}")
+            result = transfer.transfer2(account, required)
+        else:
+            rounded_money = (all_money // 100) * 100
+            if rounded_money >= 100:
+                print(f"🟡 账户余额不足，仅转账最大 100 倍数金额：{rounded_money}")
+                result = transfer.transfer2(account, rounded_money)
+            else:
+                print("❌ 可转账金额不足 100，跳过。")
+                result = False
+
+    return result
 
 def to_money1(sc_account, balance):
     """
