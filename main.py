@@ -109,8 +109,8 @@ def process_account(sc_account, date):
                 print("余额大于等于配置金额,开始执行。")
                 buy.start()
             elif last_sc_account.account == sc_account.account:
-                print("最后一个账号,金额："+balance+" 开始执行。")
-                buy.start2(balance)
+                print(f"最后一个账号,金额：{balance} 开始执行。")
+                buy.start2(int(balance))
             else:
                 print("余额小于配置金额,请手动充值。")
             # while True:

@@ -38,9 +38,10 @@ class  User:
                 print(f"尝试登录第 {retry_count + 1} 次...")
                 try:
                     # 等待验证码图片出现
-                    code=Captcha(self.driver,self.account,"4f7fe23e7cd68680a6b320982be0a1c9")
+                    code=Captcha(self.driver,self.account,"4f7fe23e7cd68680a6b320982be0a1c9","554382cb8fa92cc51aa166a252d2b04bbaf99e1f72112")
                     base64_img=code.get_captcha_base64()
-                    captcha_code = code.get_code_from_base64(base64_img)
+                    # captcha_code = code.get_code_from_base64(base64_img)
+                    captcha_code=code.get_code_from_base64_yescaptcha(base64_img)
                     if captcha_code:
                         print('识别到验证码:', captcha_code)
                         # 输入验证码
