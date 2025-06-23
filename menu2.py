@@ -44,7 +44,8 @@ MENU_ITEMS = [
     "[4]. 设置核销账号",
     "[5]. 获取核销账号信息",
     "[6]. 查询失败金额",
-    "[7]. 退出程序"
+    "[7]. 查询商城账号状态",
+    "[8]. 退出程序"
 ]
 
 
@@ -120,7 +121,7 @@ def interactive_menu():
         if result is not None:
             choice = str(result)
         else:
-            choice = '7'
+            choice = '8'
 
         # 执行菜单逻辑
         if choice == "0":
@@ -187,8 +188,25 @@ def interactive_menu():
                     all_money += record.fail_money
                 print(f"\n总失败金额：{all_money}\n")
             input("按回车键继续...")
-
         elif choice == "7":
+            try:
+                state = int(input("请输入状态："))
+            except ValueError:
+                print("请输入有效的整数状态！")
+                input("按回车键继续...")
+                return
+            sc_accounts_state=database.get_sc_accounts_by_state(int(state))
+            state_str= ""
+            if state==1:
+                state_str= "下单完成,满足30000的账号:"
+            elif state==-1:
+                state_str= "余额不足,下单不满30000的商场账号:"
+            print(f"{state_str}")
+            for record in sc_accounts_state:
+                print(f"{record.account},更新时间: {record.update_time}")
+            input("按回车键继续...")
+
+        elif choice == "8":
             sys.exit(0)  # 强制退出整个程序
 
         else:

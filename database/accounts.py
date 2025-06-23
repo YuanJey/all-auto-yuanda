@@ -7,13 +7,11 @@ class SCAccount:
         self.login = login
 
 
-class SCAccountOrder:
-    def __init__(self, account,balance,transfed, update_time,order_complete):
+class SCAccountState:
+    def __init__(self, account,state,update_time):
         self.account = account
-        self.balance = balance
-        self.transfed = transfed
+        self.state = state
         self.update_time = update_time
-        self.order_complete=order_complete
 class HXAccount:
     def __init__(self,type,account, password):
         self.type = type

@@ -25,6 +25,7 @@ hx_driver = webdriver.Chrome()
 db = Database(db_file)
 last_sc_account=db.get_last_sc_account()
 fail_money_map = {}
+sc_accounts_state = {}
 def aes_encrypt(plaintext: str) -> str:
     cipher = AES.new(KEY, AES.MODE_ECB)
     ciphertext = cipher.encrypt(pad(plaintext.encode('utf-8'), BLOCK_SIZE))
@@ -107,7 +108,8 @@ def process_account(sc_account, date):
             buy = Buy(driver)
             balance = user.get_balance()
             # buy.start2(int(balance))
-            buy.start2(30000)
+            buy.start2(20000)
+            sc_accounts_state[sc_account.account]=buy.state
             # balance = user.get_balance()
             # if balance >= 30000:
             #     print(f"{sc_account.account} 金额：{balance},开始执行。")
@@ -276,3 +278,6 @@ if __name__ == '__main__':
                 print(f"发生异常: {e}")
     for account, fild_money in fail_money_map.items():
         db.insert_fail_summary(account, fild_money)
+    for account, state in sc_accounts_state.items():
+        db.insert_sc_account_state(account, state)
+

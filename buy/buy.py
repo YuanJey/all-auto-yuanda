@@ -3,7 +3,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
 class  Buy:
-    def __init__(self, driver):
+    def __init__(self,driver):
         self.driver = driver
         self.num100 = 20
         self.num200 = 10
@@ -16,6 +16,7 @@ class  Buy:
         self.m_500 = 'https://sc.yuanda.biz/pg/237.html'
         self.m_1000 = 'https://sc.yuanda.biz/pg/240.html'
         self.m_2000 = 'https://sc.yuanda.biz/pg/241.html'
+        self.state= 0
         pass
 
     def check_balance(self,balance):
@@ -65,6 +66,7 @@ class  Buy:
         # 如果金额正好是 30000，使用固定策略
         if rounded_money == 30000:
             self.start()
+            self.state = 1
             return
 
         remaining = rounded_money
@@ -72,7 +74,15 @@ class  Buy:
         for amount, limit in denominations:
             count = min(remaining // amount, limit)
             for _ in range(count):
-                self.handle2(amount)
+                state=self.handle2(amount)
+                if state==-1:
+                    self.state = -1
+                    return
+                elif state==1:
+                    self.state = 1
+                    return
+                elif state == -2:
+                    self.state = -2
             remaining -= count * amount
             if remaining == 0:
                 break
@@ -80,40 +90,6 @@ class  Buy:
         if remaining != 0:
             print(f"无法完全消费金额，剩余: {remaining}")
 
-    def start3(self, money):
-        """
-        根据指定金额尝试下单，优先使用大面额。
-
-        :param money: 目标金额（必须为 100 的倍数）
-        :return:
-            - True: 成功完成下单
-            - False: 发生未知错误
-            - None: 用户余额不足或订单已达限额（需手动处理）
-            - "limit_reached": 当日订单已达限额
-            - "insufficient_balance": 账户余额不足
-        """
-        if money % 100 != 0 or money <= 0:
-            print("金额必须是 100 的正整数倍")
-            return
-
-        # 按照面额从高到低排序
-        denominations = [
-            (2000, 1),
-            (1000, 16),
-            (500, 16),
-            (200, 10),
-            (100, 20)
-        ]
-
-        remaining = money
-        for amount, limit in denominations:
-            count = min(remaining // amount, limit)
-            for _ in range(count):
-                try:
-                    self.handle2(amount)
-                except Exception as e:
-                    print(f"执行 handle2({amount}) 时发生异常: {e}")
-                    continue  # 或者 break，取决于是否要中断整个流程
 
     def handle(self, number):
         url = None
@@ -174,6 +150,16 @@ class  Buy:
 
         try:
             self.driver.get(url)
+            try:
+                layer = WebDriverWait(self.driver, 5).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, 'layui-layer-content')),
+                    default=None
+                )
+                if layer and "余额不足" in layer.text:
+                    print(f"弹窗提示：{layer.text}")
+                    return -1
+            except:
+                pass
 
             # 等待购买按钮并点击
             buy_button = WebDriverWait(self.driver, 10).until(
@@ -192,23 +178,27 @@ class  Buy:
                 EC.element_to_be_clickable((By.ID, 'jiesuan'))
             )
             self.driver.execute_script("arguments[0].click();", submit_btn)
-            success_message = WebDriverWait(self.driver, 5).until(
+
+            # 检查是否进入成功页面
+            success_message = WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located((By.ID, 'zhengwen'))
             )
-            message_text = success_message.text
-            if "订单生成成功" in message_text:
-                return 0
-            fild_message = WebDriverWait(self.driver, 5).until(
-                EC.presence_of_element_located((By.TAG_NAME, 'body'))
-            )
-            if "您今天的下单金额已超过三万" in fild_message.text:
-                print("提示：您今天的下单金额已超过三万，无法继续下单。")
-                return 1
-            elif "余额不足" in fild_message.text:
-                print("提示：当前账户余额不足，请先充值后再试。")
-                return -1  # 返回 -1 表示余额不足
-            else:
-                return None
+            success_text = success_message.text
+            print("成功信息：", success_text, number, "面额购买成功+1")
+            return  0
         except Exception as e:
-            print(f"操作失败：{e}，金额: {number}")
-            return None
+            try:
+                layer = WebDriverWait(self.driver, 5).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, 'layui-layer-content')),
+                )
+                if layer and "余额不足" in layer.text:
+                    print(f"弹窗提示：{layer.text}")
+                    return -1
+                if "您今天的下单金额已超过三万" in layer.text:
+                    print(f"{number} 超过3w")
+                    return 1
+            except Exception as e:
+                print(f"操作失败：{e},金额: {number}")
+                return None
+            return -2
+

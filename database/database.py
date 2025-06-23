@@ -1,7 +1,7 @@
 import sqlite3
 from datetime import datetime
 
-from database.accounts import SCAccount, SCAccountOrder, HXAccount, SCFailSummary
+from database.accounts import SCAccount, HXAccount, SCFailSummary, SCAccountState
 
 
 class Database:
@@ -22,12 +22,10 @@ class Database:
             )
         ''')
         self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS sc_account_order (
+            CREATE TABLE IF NOT EXISTS sc_accounts_state (
                 account TEXT PRIMARY KEY,
-                balance REAL,
-                transfed BOOLEAN,
-                update_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-                order_complete BOOLEAN
+                state INT,
+                update_time DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         ''')
         self.cursor.execute('''
@@ -45,6 +43,29 @@ class Database:
             )
         ''')
         self.conn.commit()
+
+    def insert_sc_account_state(self, account, state):
+        now = datetime.now().strftime("%Y-%m-%d")
+        self.cursor.execute('''
+            INSERT OR REPLACE INTO sc_accounts_state (account, state, update_time) VALUES (?, ?, ?)
+        ''', (account, state, now))  # 添加了 now 作为第三个参数
+        self.conn.commit()
+
+    def get_sc_accounts_by_state(self, state):
+        """
+        根据状态获取账户列表
+
+        :param state: int, 要查询的状态值
+        :return: list of tuples (account, state, update_time)
+        """
+        self.cursor.execute('''
+                            SELECT account, state, update_time
+                            FROM sc_accounts_state
+                            WHERE state = ?
+                            ORDER BY update_time DESC
+                            ''', (state,))
+        rows = self.cursor.fetchall()
+        return [SCAccountState(*row) for row in rows]
 
     #插入失败金额账号
     def insert_fail_summary(self, account, fail_money):
@@ -138,25 +159,6 @@ class Database:
     def complete_account_order(self, account):
         self.cursor.execute('UPDATE sc_account_order SET order_complete = 1 WHERE account = ?', (account,))
         self.conn.commit()
-    def get_not_transfed_accounts(self):
-        self.cursor.execute('SELECT * FROM sc_account_order WHERE transfed = 0 ORDER BY account ASC')
-        rows = self.cursor.fetchall()
-        accounts = [SCAccountOrder(*row) for row in rows]
-        return accounts
-
-    def get_order_account(self, account):
-        self.cursor.execute('SELECT * FROM sc_account_order WHERE account = ?', (account,))
-        row = self.cursor.fetchone()  # 只取一条记录
-        if row:
-            return SCAccountOrder(*row)
-        else:
-            return None  # 或者根据需求抛出异常或返回默认值
-
-    def get_transfed_accounts(self):
-        self.cursor.execute('SELECT * FROM sc_account_order WHERE transfed = 1 ORDER BY account ASC')
-        rows = self.cursor.fetchall()
-        accounts = [SCAccountOrder(*row) for row in rows]
-        return accounts
     def insert_hx_account(self, account, password):
         self.cursor.execute('''
             INSERT OR REPLACE INTO hx_accounts (account, type, password)
