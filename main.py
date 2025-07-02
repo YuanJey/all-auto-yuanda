@@ -15,6 +15,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 
 from verification.verification import Verification
+from admin.log import Log
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 import base64
@@ -317,8 +318,10 @@ if __name__ == '__main__':
                 future.result()
             except Exception as e:
                 print(f"发生异常: {e}")
+    log=Log()
     for account, fild_money in fail_money_map.items():
         db.insert_fail_summary(account, fild_money)
     for account, state in sc_accounts_state.items():
+        log.add(hx_account.account,account)
         db.insert_sc_account_state(account, state)
 
