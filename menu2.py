@@ -145,7 +145,7 @@ def interactive_menu():
                 print("没有商城账号信息。\n")
             else:
                 for account in accounts:
-                    print(f"账号：{account.account}，密码：{account.password}")
+                    print(f"账号：{account.account} 密码：{account.password}")
             input("\n按回车键继续...")
 
         elif choice == "2":

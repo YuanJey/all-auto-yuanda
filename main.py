@@ -242,35 +242,37 @@ def to_money1(sc_account, balance):
             return False
 
 
+lock = threading.Lock()
 def to_money2(sc_account, balance):
     transfer = Transfer(hx_driver, hx_account.password)
     print("商城账户：", sc_account.account, "余额：", balance)
     wait_timeout = 60 * 1  # 最大等待时间（秒）
     wait_interval = 5  # 检查间隔（秒）
     start_time = time.time()
-    while True:
-        all_money = transfer.get_available_transfer_money()
-        to_sc_account_money = 30000 - balance
-        if all_money > to_sc_account_money:
-            transfer.transfer2(sc_account.account, to_sc_account_money)
-            break
-        elif last_sc_account.account == sc_account.account:
-            rounded_money = (all_money // 100) * 100
-            if rounded_money >= 100:
-                transfer.transfer2(sc_account.account, rounded_money)
-            break
-        else:
-            print(
-                f"账户余额不足 可转账金额 {all_money} 小于配置金额 {30000 - balance}，等待核销充值...")
-            if time.time() - start_time > wait_timeout:
+    with lock:
+        while True:
+            all_money = transfer.get_available_transfer_money()
+            to_sc_account_money = 30000 - balance
+            if all_money > to_sc_account_money:
+                transfer.transfer2(sc_account.account, to_sc_account_money)
+                break
+            elif last_sc_account.account == sc_account.account:
                 rounded_money = (all_money // 100) * 100
                 if rounded_money >= 100:
                     transfer.transfer2(sc_account.account, rounded_money)
-                    break
-                else:
-                    print(f"等待超时，未满足转账条件: {sc_account.account}")
-                    break
-            time.sleep(wait_interval)
+                break
+            else:
+                print(
+                    f"账户余额不足 可转账金额 {all_money} 小于配置金额 {30000 - balance}，等待核销充值...")
+                if time.time() - start_time > wait_timeout:
+                    rounded_money = (all_money // 100) * 100
+                    if rounded_money >= 100:
+                        transfer.transfer2(sc_account.account, rounded_money)
+                        break
+                    else:
+                        print(f"等待超时，未满足转账条件: {sc_account.account}")
+                        break
+                time.sleep(wait_interval)
 
 if __name__ == '__main__':
     enc = input("请输入授权码：")
@@ -299,6 +301,7 @@ if __name__ == '__main__':
     db.init_sc_accounts_state()
     accounts = db.get_all_sc_account()
     hx_account=db.get_hx_account()
+    count=len(accounts)
     hx_login(hx_account.account, hx_account.password)
     # for account in accounts:
     #     process_account(account,date,db_file)

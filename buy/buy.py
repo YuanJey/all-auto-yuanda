@@ -6,10 +6,10 @@ class  Buy:
     def __init__(self,driver):
         self.driver = driver
         self.num100 = 20
-        self.num200 = 10
-        self.num500 = 12
-        self.num1000 = 12
-        self.num2000 = 4
+        self.num200 = 20
+        self.num500 = 20
+        self.num1000 = 10
+        self.num2000 = 2
         # self.num100 = 20
         # self.num200 = 10
         # self.num500 = 16
@@ -68,10 +68,10 @@ class  Buy:
         #     (100, 20)
         # ]
         denominations = [
-            (2000, 4),
-            (1000, 12),
-            (500, 12),
-            (200, 10),
+            (2000, 2),
+            (1000, 10),
+            (500, 20),
+            (200, 20),
             (100, 20)
         ]
 
