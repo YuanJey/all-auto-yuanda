@@ -310,7 +310,6 @@ if __name__ == '__main__':
     # for account in accounts:
     #     process_account(account,date,db_file)
     # 设置最大并发线程数
-    finish_sc_accounts = db.get_sc_accounts_by_state(1)
     with ThreadPoolExecutor(max_workers=max_work) as executor:
         futures = [
             executor.submit(process_account, account, date)
