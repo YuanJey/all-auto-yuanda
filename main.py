@@ -282,15 +282,16 @@ if __name__ == '__main__':
     if dec != enc and hx_account.account != "19155789001":
         print("授权码错误")
         exit()
-    max_work_input = input("请输入同时处理账号数量(根据自己电脑配置和网络选择1-6)：")
-    try:
-        max_work = int(max_work_input)
-        if not (1 <= max_work <= 6):  # 限制范围
-            print("输入超出范围，默认使用 2")
-            max_work = 2
-    except ValueError:
-        print("输入无效，默认使用 2")
-        max_work = 2
+    # max_work_input = input("请输入同时处理账号数量(根据自己电脑配置和网络选择1-6)：")
+    # try:
+    #     max_work = int(max_work_input)
+    #     if not (1 <= max_work <= 6):  # 限制范围
+    #         print("输入超出范围，默认使用 2")
+    #         max_work = 2
+    # except ValueError:
+    #     print("输入无效，默认使用 2")
+    #     max_work = 2
+    max_work = 1
     date = input("请输入核销的订单日期(例如:2025-06-18),回车默认为前一天：")
     if not date:
         current_date = datetime.now()

@@ -1,3 +1,5 @@
+import time
+
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -5,16 +7,16 @@ from selenium.webdriver.common.by import By
 class  Buy:
     def __init__(self,driver):
         self.driver = driver
-        self.num100 = 20
-        self.num200 = 20
-        self.num500 = 20
-        self.num1000 = 10
-        self.num2000 = 2
         # self.num100 = 20
-        # self.num200 = 10
-        # self.num500 = 16
-        # self.num1000 = 16
-        # self.num2000 = 1
+        # self.num200 = 20
+        # self.num500 = 20
+        # self.num1000 = 10
+        # self.num2000 = 2
+        self.num100 = 20
+        self.num200 = 10
+        self.num500 = 16
+        self.num1000 = 16
+        self.num2000 = 1
         self.amount=  self.num100*100+self.num200*200+self.num500*500+self.num1000*1000+self.num2000*2000
         self.m_100 = 'https://sc.yuanda.biz/pg/234.html'
         self.m_200 = 'https://sc.yuanda.biz/pg/235.html'
@@ -33,15 +35,15 @@ class  Buy:
             return False
     def start(self):
         for i in range(self.num100):
-            self.handle(100)
+            self.handle2(100)
         for i in range(self.num200):
-            self.handle(200)
+            self.handle2(200)
         for i in range(self.num500):
-            self.handle(500)
+            self.handle2(500)
         for i in range(self.num1000):
-            self.handle(1000)
+            self.handle2(1000)
         for i in range(self.num2000):
-            self.handle(2000)
+            self.handle2(2000)
 
     def start2(self, money):
         """
@@ -60,20 +62,20 @@ class  Buy:
             print(f"⚠️ 输入金额 {money} 非 100 的整数倍，已自动调整为：{rounded_money}")
 
         # 定义面额和对应的数量限制
-        # denominations = [
-        #     (2000, 1),
-        #     (1000, 16),
-        #     (500, 16),
-        #     (200, 10),
-        #     (100, 20)
-        # ]
         denominations = [
-            (2000, 2),
-            (1000, 10),
-            (500, 20),
-            (200, 20),
+            (2000, 1),
+            (1000, 16),
+            (500, 16),
+            (200, 10),
             (100, 20)
         ]
+        # denominations = [
+        #     (2000, 2),
+        #     (1000, 10),
+        #     (500, 20),
+        #     (200, 20),
+        #     (100, 20)
+        # ]
 
         # 如果金额正好是 30000，使用固定策略
         if rounded_money == 30000:
@@ -162,6 +164,7 @@ class  Buy:
 
         try:
             self.driver.get(url)
+            time.sleep(5)
             # 等待购买按钮并点击
             buy_button = WebDriverWait(self.driver, 5).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.cart-buy > a.buy-btn'))
