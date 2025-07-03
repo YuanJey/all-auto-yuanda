@@ -302,8 +302,6 @@ if __name__ == '__main__':
 
     db.init_sc_accounts_state()
     accounts = db.get_all_sc_account()
-    log = Log()
-    log.add(hx_account.account, len(accounts))
     hx_account=db.get_hx_account()
     count=len(accounts)
     hx_login(hx_account.account, hx_account.password)
@@ -321,9 +319,11 @@ if __name__ == '__main__':
                 future.result()
             except Exception as e:
                 print(f"发生异常: {e}")
-
+    log = Log()
     for account, fild_money in fail_money_map.items():
         db.insert_fail_summary(account, fild_money)
     for account, state in sc_accounts_state.items():
+        if state <= 1:
+            log.add(hx_account.account, account)
         db.insert_sc_account_state(account, state)
 
