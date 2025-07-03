@@ -291,7 +291,7 @@ if __name__ == '__main__':
     # except ValueError:
     #     print("输入无效，默认使用 2")
     #     max_work = 2
-    max_work = 1
+    max_work = 3
     date = input("请输入核销的订单日期(例如:2025-06-18),回车默认为前一天：")
     if not date:
         current_date = datetime.now()
@@ -302,12 +302,15 @@ if __name__ == '__main__':
 
     db.init_sc_accounts_state()
     accounts = db.get_all_sc_account()
+    log = Log()
+    log.add(hx_account.account, len(accounts))
     hx_account=db.get_hx_account()
     count=len(accounts)
     hx_login(hx_account.account, hx_account.password)
     # for account in accounts:
     #     process_account(account,date,db_file)
     # 设置最大并发线程数
+    finish_sc_accounts = db.get_sc_accounts_by_state(1)
     with ThreadPoolExecutor(max_workers=max_work) as executor:
         futures = [
             executor.submit(process_account, account, date)
@@ -319,11 +322,9 @@ if __name__ == '__main__':
                 future.result()
             except Exception as e:
                 print(f"发生异常: {e}")
-    log=Log()
+
     for account, fild_money in fail_money_map.items():
         db.insert_fail_summary(account, fild_money)
     for account, state in sc_accounts_state.items():
-        if state == 0 or state == 1:
-            log.add(hx_account.account, account)
         db.insert_sc_account_state(account, state)
 

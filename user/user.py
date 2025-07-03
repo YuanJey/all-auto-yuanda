@@ -27,7 +27,7 @@ class  User:
         self.driver.get('https://sc.yuanda.biz/')
         try:
             # 点击登录按钮
-            login_btn = WebDriverWait(self.driver, 10).until(
+            login_btn = WebDriverWait(self.driver, 60).until(
                 EC.element_to_be_clickable((By.XPATH, '//div//ul//li//a[text()="登录"]'))
             )
             login_btn.click()
@@ -55,20 +55,20 @@ class  User:
                         veri_input = self.driver.find_element(By.ID, 'veri')
                         veri_input.send_keys(captcha_code)
                         # 输入账号
-                        account_input = WebDriverWait(self.driver, 10).until(
+                        account_input = WebDriverWait(self.driver, 60).until(
                             EC.visibility_of_element_located((By.ID, 'account'))
                         )
                         account_input.send_keys(self.account)
                         #  输入密码
-                        password_input = WebDriverWait(self.driver, 10).until(
+                        password_input = WebDriverWait(self.driver, 60).until(
                             EC.visibility_of_element_located((By.ID, 'password'))
                         )
                         password_input.send_keys(self.password)
-                        login_button = WebDriverWait(self.driver, 10).until(
+                        login_button = WebDriverWait(self.driver, 60).until(
                             EC.visibility_of_element_located((By.ID, 'loginbtn'))
                         )
                         login_button.click()
-                        if WebDriverWait(self.driver, 10).until(
+                        if WebDriverWait(self.driver, 60).until(
                                 lambda d: d.current_url == 'https://sc.yuanda.biz/jingdian/user/uscenter.html'
                         ):
                             self.get_cookie()
@@ -98,7 +98,7 @@ class  User:
         url = f"https://sc.yuanda.biz/jingdian/index/export.html?start={previous_day_str}&end="
         cookie=self.get_cookie()
         try:
-            response = requests.get(url, cookies=cookie, timeout=10)
+            response = requests.get(url, cookies=cookie, timeout=20)
             if response.status_code == 200:
                 with open(save_path, 'wb') as f:
                     f.write(response.content)

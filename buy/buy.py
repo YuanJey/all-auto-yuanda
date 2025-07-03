@@ -119,26 +119,26 @@ class  Buy:
             url = self.m_2000
         try:
             self.driver.get(url)
-            buy_button = WebDriverWait(self.driver, 5).until(
+            buy_button = WebDriverWait(self.driver, 60).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.cart-buy > a.buy-btn'))
             )
             # 使用JavaScript点击
             self.driver.execute_script("arguments[0].click();", buy_button)
 
             # 找“找人代付”并点击
-            pay_button = WebDriverWait(self.driver, 5).until(
+            pay_button = WebDriverWait(self.driver, 60).until(
                 EC.element_to_be_clickable((By.ID, 'alipay'))
             )
             self.driver.execute_script("arguments[0].click();", pay_button)
 
             # 点击结算按钮
-            submit_btn = WebDriverWait(self.driver, 5).until(
+            submit_btn = WebDriverWait(self.driver, 60).until(
                 EC.element_to_be_clickable((By.ID, 'jiesuan'))
             )
             # 使用JavaScript点击
             self.driver.execute_script("arguments[0].click();", submit_btn)
 
-            success_message = WebDriverWait(self.driver, 5).until(
+            success_message = WebDriverWait(self.driver, 60).until(
                 EC.presence_of_element_located((By.ID, 'zhengwen'))
             )
             message_text = success_message.text
@@ -164,27 +164,27 @@ class  Buy:
 
         try:
             self.driver.get(url)
-            time.sleep(5)
+            # time.sleep(5)
             # 等待购买按钮并点击
-            buy_button = WebDriverWait(self.driver, 5).until(
+            buy_button = WebDriverWait(self.driver, 60).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.cart-buy > a.buy-btn'))
             )
             self.driver.execute_script("arguments[0].click();", buy_button)
 
             # 等待支付按钮并点击
-            pay_button = WebDriverWait(self.driver, 5).until(
+            pay_button = WebDriverWait(self.driver, 60).until(
                 EC.element_to_be_clickable((By.ID, 'alipay'))
             )
             self.driver.execute_script("arguments[0].click();", pay_button)
 
             # 等待结算按钮并点击
-            submit_btn = WebDriverWait(self.driver, 5).until(
+            submit_btn = WebDriverWait(self.driver, 60).until(
                 EC.element_to_be_clickable((By.ID, 'jiesuan'))
             )
             self.driver.execute_script("arguments[0].click();", submit_btn)
 
             # 检查是否进入成功页面
-            success_message = WebDriverWait(self.driver, 5).until(
+            success_message = WebDriverWait(self.driver, 60).until(
                 EC.presence_of_element_located((By.ID, 'zhengwen'))
             )
             success_text = success_message.text
@@ -192,7 +192,7 @@ class  Buy:
             return  0
         except Exception as e:
             try:
-                layer = WebDriverWait(self.driver, 5).until(
+                layer = WebDriverWait(self.driver, 60).until(
                     EC.presence_of_element_located((By.CLASS_NAME, 'layui-layer-content')),
                 )
                 if layer and "余额不足" in layer.text:
