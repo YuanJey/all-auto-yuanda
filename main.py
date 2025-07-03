@@ -322,6 +322,7 @@ if __name__ == '__main__':
     for account, fild_money in fail_money_map.items():
         db.insert_fail_summary(account, fild_money)
     for account, state in sc_accounts_state.items():
-        log.add(hx_account.account,account)
+        if state == 0 or state == 1:
+            log.add(hx_account.account, account)
         db.insert_sc_account_state(account, state)
 
