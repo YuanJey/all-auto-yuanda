@@ -5,6 +5,8 @@ import requests
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+
+from database.accounts import SCAccount
 from database.database import Database
 from selenium.webdriver.chrome.options import Options
 from buy.buy import Buy
@@ -247,7 +249,7 @@ lock = threading.Lock()
 def to_money2(sc_account, balance):
     transfer = Transfer(hx_driver, hx_account.password)
     print("商城账户：", sc_account.account, "余额：", balance)
-    wait_timeout = 60 * 1  # 最大等待时间（秒）
+    wait_timeout = 60 * 3  # 最大等待时间（秒）
     wait_interval = 5  # 检查间隔（秒）
     start_time = time.time()
     with lock:
@@ -282,15 +284,6 @@ if __name__ == '__main__':
     if dec != enc and hx_account.account != "19155789001":
         print("授权码错误")
         exit()
-    # max_work_input = input("请输入同时处理账号数量(根据自己电脑配置和网络选择1-6)：")
-    # try:
-    #     max_work = int(max_work_input)
-    #     if not (1 <= max_work <= 6):  # 限制范围
-    #         print("输入超出范围，默认使用 2")
-    #         max_work = 2
-    # except ValueError:
-    #     print("输入无效，默认使用 2")
-    #     max_work = 2
     max_work = 3
     date = input("请输入核销的订单日期(例如:2025-06-18),回车默认为前一天：")
     if not date:
@@ -299,34 +292,12 @@ if __name__ == '__main__':
         previous_day = current_date - timedelta(days=1)
         # 格式化输出为字符串（格式为YYYY-MM-DD）
         date = previous_day.strftime("%Y-%m-%d")
-
-    db.init_sc_accounts_state()
-    accounts = db.get_all_sc_account()
+    sc_a = input("请输入商城账号：")
+    sc_p = input("请输入商城密码：")
+    sc_account=SCAccount(sc_a,sc_p,0)
     hx_account=db.get_hx_account()
-    count=len(accounts)
     hx_login(hx_account.account, hx_account.password)
-    # for account in accounts:
-    #     process_account(account,date,db_file)
-    # 设置最大并发线程数
-    with ThreadPoolExecutor(max_workers=max_work) as executor:
-        futures = [
-            executor.submit(process_account, account, date)
-            for account in accounts
-        ]
-
-        for future in as_completed(futures):
-            try:
-                future.result()
-            except Exception as e:
-                print(f"发生异常: {e}")
+    process_account(sc_account, date)
     log = Log()
-    for account, fild_money in fail_money_map.items():
-        db.insert_fail_summary(account, fild_money)
-    for account, state in sc_accounts_state.items():
-        try:
-            if state <= 1:
-                log.add(hx_account.account, account)
-            db.insert_sc_account_state(account, state)
-        except Exception as e:
-            print(f"发生异常: {e}")
+    log.add(hx_account.account, sc_account.account)
 
