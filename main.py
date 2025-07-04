@@ -13,6 +13,8 @@ from user.user import User
 from selenium import webdriver
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
+from queue import Queue
+import threading
 
 from verification.verification import Verification
 from admin.log import Log
@@ -291,7 +293,7 @@ if __name__ == '__main__':
     # except ValueError:
     #     print("输入无效，默认使用 2")
     #     max_work = 2
-    max_work = 3
+    max_work = 1
     date = input("请输入核销的订单日期(例如:2025-06-18),回车默认为前一天：")
     if not date:
         current_date = datetime.now()
@@ -307,18 +309,42 @@ if __name__ == '__main__':
     hx_login(hx_account.account, hx_account.password)
     # for account in accounts:
     #     process_account(account,date,db_file)
-    # 设置最大并发线程数
-    with ThreadPoolExecutor(max_workers=max_work) as executor:
-        futures = [
-            executor.submit(process_account, account, date)
-            for account in accounts
-        ]
+    # 创建任务队列
+    task_queue = Queue()
 
-        for future in as_completed(futures):
+    # 启动工作线程
+    def worker():
+        while True:
+            account = task_queue.get()
+            if account is None:
+                break
             try:
-                future.result()
+                process_account(account, date)
             except Exception as e:
                 print(f"发生异常: {e}")
+            finally:
+                task_queue.task_done()
+
+    # 填充任务队列
+    for account in accounts:
+        task_queue.put(account)
+
+    # 创建并启动工作线程
+    threads = []
+    for _ in range(max_work):
+        thread = threading.Thread(target=worker)
+        thread.start()
+        threads.append(thread)
+
+    # 等待所有任务完成
+    task_queue.join()
+
+    # 停止工作线程
+    for _ in range(max_work):
+        task_queue.put(None)
+    for thread in threads:
+        thread.join()
+    
     log = Log()
     for account, fild_money in fail_money_map.items():
         db.insert_fail_summary(account, fild_money)
