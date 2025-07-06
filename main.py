@@ -39,31 +39,6 @@ class Transfer:
         self.password=password
         self.url="https://hx.yuanda.biz/Home/User/tomall"
 
-    def transfer(self,account,money):
-        self.driver.get(self.url)
-        # 等待元素出现（最多等待10秒）
-        account_input = WebDriverWait(self.driver, 120).until(
-            EC.presence_of_element_located((By.ID, 'account'))
-        )
-        account_input.clear()
-        account_input.send_keys(account)
-        money_input = WebDriverWait(self.driver, 120).until(
-            EC.presence_of_element_located((By.ID, 'money'))
-        )
-        money_input.clear()
-        money_input.send_keys(str(money))
-
-        passwd_input = WebDriverWait(self.driver, 120).until(
-            EC.presence_of_element_located((By.ID, 'passwd'))
-        )
-        passwd_input.clear()
-        passwd_input.send_keys(str(money))
-        wait = WebDriverWait(self.driver, 120)
-        confirm_button = wait.until(
-            EC.element_to_be_clickable((By.XPATH, '//div[@class="apply-footer-btn " and text()="确认转账"]'))
-        )
-        confirm_button.click()
-
     def transfer2(self, account, money):
         url = "https://hx.yuanda.biz/Home/User/tomall_apply"
 
@@ -109,34 +84,7 @@ def process_account(sc_account, date):
             buy = Buy(driver)
             balance = user.get_balance()
             buy.start2(int(balance))
-            # buy.start2(2000)
             sc_accounts_state[sc_account.account]=buy.state
-            # balance = user.get_balance()
-            # if balance >= 30000:
-            #     print(f"{sc_account.account} 金额：{balance},开始执行。")
-            #     buy.start()
-            # elif last_sc_account.account == sc_account.account:
-            #     print(f"最后一个账号 {sc_account.account},金额：{balance} 开始执行。")
-            #     buy.start2(int(balance))
-            # else:
-            #     print("余额小于配置金额,请手动充值。")
-
-
-            # while True:
-            #     balance = user.get_balance()
-            #     # local_db.get_transfed_accounts()
-            #     sc_account=local_db.get_order_account(account.account)
-            #     # if buy.check_balance(balance):
-            #     #     print("余额大于等于配置金额,即将开始执行。")
-            #     #     break
-            #     if sc_account.transfed:
-            #         balance = user.get_balance()
-            #         print(sc_account.account,"已转账","余额:",balance)
-            #         break
-            #     else:
-            #         print("还未转账，等待充值...")
-            #         time.sleep(20)
-            # buy.start()
     finally:
         driver.quit()
 def hx_login(account, password):
@@ -200,81 +148,6 @@ def hx(path,file):
         # print("开始核销jd卡号：", jd_account, "卡密：", jd_password)
         verification.verification(jd_account, jd_password)
     verification.save_fail_summary(file)
-def to_money(sc_account, balance):
-    transfer = Transfer(hx_driver, hx_account.password)
-    print("商城账户：", sc_account.account, "余额：", balance)
-    all_money = transfer.get_available_transfer_money()
-    to_sc_account_money = 30000 - balance
-    if all_money > to_sc_account_money:
-        transfer.transfer2(sc_account.account, to_sc_account_money)
-    elif last_sc_account.account==sc_account.account:
-        rounded_money = (all_money // 100) * 100
-        if rounded_money>=100:
-            transfer.transfer2(sc_account.account, rounded_money)
-    else:
-        print(
-            f"账户余额不足 可转账金额 {all_money} 小于配置金额 {30000 - balance}，请手动充值。")
-
-# 在全局作用域中定义一个锁
-global_transfer_lock = threading.Lock()
-
-def to_money_lock(sc_account, balance):
-    """
-    向商城账号充值至 30000 元，最多转不超过可转账额度的最大 100 的整数倍金额。
-    使用锁保护对「全局可转账金额」的访问。
-
-    :param sc_account: 商城账号对象
-    :param balance: 当前余额（float 或 int）
-    :return: bool - 是否成功完成转账
-    """
-    account = sc_account.account
-    transfer = Transfer(hx_driver, hx_account.password)
-
-    print(f"【开始转账】商城账户：{account}，当前余额：{balance}")
-
-    with global_transfer_lock:  # 加锁，防止多个线程同时读取可转账金额
-        all_money = transfer.get_available_transfer_money()
-        required = max(0, 30000 - balance)
-
-        if all_money >= required:
-            print(f"✅ 可转账金额 {all_money} ≥ 需要金额 {required}，全额转账 {required}")
-            result = transfer.transfer2(account, required)
-        else:
-            rounded_money = (all_money // 100) * 100
-            if rounded_money >= 100:
-                print(f"🟡 账户余额不足，仅转账最大 100 倍数金额：{rounded_money}")
-                result = transfer.transfer2(account, rounded_money)
-            else:
-                print("❌ 可转账金额不足 100，跳过。")
-                result = False
-
-    return result
-
-def to_money1(sc_account, balance):
-    """
-    向商城账号充值至 30000 元，最多转不超过可转账额度的最大 100 的整数倍金额。
-
-    :param sc_account: 商城账号对象
-    :param balance: 当前余额（float 或 int）
-    :return: bool - 是否成功完成转账
-    """
-    transfer = Transfer(hx_driver, hx_account.password)
-    print(f"【开始转账】商城账户：{sc_account.account}，当前余额：{balance}")
-
-    all_money = transfer.get_available_transfer_money()
-    required = max(0, 30000 - balance)
-
-    if all_money >= required:
-        print(f"✅ 可转账金额 {all_money} ≥ 需要金额 {required}，全额转账 {required}")
-        return transfer.transfer2(sc_account.account, required)
-    else:
-        rounded_money = (all_money // 100) * 100
-        if rounded_money >= 100:
-            return transfer.transfer2(sc_account.account, rounded_money)
-        else:
-            print("❌ 可转账金额不足 100，跳过。")
-            return False
-
 
 lock = threading.Lock()
 def to_money2(sc_account, balance):
