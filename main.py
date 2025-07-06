@@ -141,10 +141,20 @@ def process_account(sc_account, date):
         driver.quit()
 def hx_login(account, password):
     hx_driver.get("https://hx.yuanda.biz")  # 访问目标网址
+
     login_button = WebDriverWait(hx_driver, 60).until(
         EC.presence_of_element_located((By.CLASS_NAME, "btn_login.loginbox"))
     )
     login_button.click()
+
+    # 等待遮罩层消失（假设类名为 .layui-layer-shade）
+    try:
+        WebDriverWait(hx_driver, 60).until(
+            EC.invisibility_of_element_located((By.CLASS_NAME, "layui-layer-shade"))
+        )
+    except:
+        print("遮罩层未消失，可能影响后续操作")
+
     iframe = WebDriverWait(hx_driver, 60).until(
         EC.presence_of_element_located((By.TAG_NAME, 'iframe'))
     )
@@ -156,10 +166,12 @@ def hx_login(account, password):
         EC.presence_of_element_located((By.ID, "phone"))
     )
     phone_input.send_keys(account)
+
     password_input = WebDriverWait(hx_driver, 60).until(
         EC.presence_of_element_located((By.ID, "password"))
     )
     password_input.send_keys(password)
+
     login_button = WebDriverWait(hx_driver, 60).until(
         EC.element_to_be_clickable((By.ID, "login"))
     )
@@ -169,7 +181,7 @@ def hx_login(account, password):
     while True:
         try:
             # 等待用户信息区域出现，表示已登录
-            user_info = WebDriverWait(hx_driver, 10).until(
+            WebDriverWait(hx_driver, 10).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "user-right-name.fl.cf"))
             )
             print("当前已登录")
