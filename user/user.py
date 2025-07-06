@@ -33,20 +33,11 @@ class  User:
             login_btn.click()
             # 循环处理验证码
             retry_count = 0
+            self.code = Yescaptcha(self.driver, "554382cb8fa92cc51aa166a252d2b04bbaf99e1f72112")
             while True:
                 print(f"尝试登录第 {retry_count + 1} 次...")
                 try:
-                    # self.code = Captcha2(self.driver, "4f7fe23e7cd68680a6b320982be0a1c9")
-                    self.code = Yescaptcha(self.driver, "554382cb8fa92cc51aa166a252d2b04bbaf99e1f72112")
                     # 等待验证码图片出现
-                    # code=Captcha2(self.driver,"4f7fe23e7cd68680a6b320982be0a1c9")
-                    # base64_img=code.get_captcha_base64()
-                    # captcha_code = code.get_code_from_base64(base64_img)
-
-                    # code=Yescaptcha(self.driver,"554382cb8fa92cc51aa166a252d2b04bbaf99e1f72112")
-                    # base64_img=code.get_captcha_base64()
-                    # captcha_code=code.get_captcha_result(base64_img)
-
                     base64_img = self.code.get_captcha_base64()
                     captcha_code = self.code.get_captcha_result(base64_img)
                     if captcha_code:
@@ -68,7 +59,7 @@ class  User:
                             EC.visibility_of_element_located((By.ID, 'loginbtn'))
                         )
                         login_button.click()
-                        if WebDriverWait(self.driver, 60).until(
+                        if WebDriverWait(self.driver, 5).until(
                                 lambda d: d.current_url == 'https://sc.yuanda.biz/jingdian/user/uscenter.html'
                         ):
                             self.get_cookie()
@@ -77,13 +68,15 @@ class  User:
                             print('登录失败，页面未跳转。刷新重试...')
                             self.driver.refresh()
                     else:
-                        print('验证码识别失败，刷新页面重试...')
-                        self.driver.refresh()
-                        retry_count += 1
+                        print('验证码识别失败，重新尝试识别...')
+                        self.driver.refresh()  # 刷新页面以获取新验证码
+                        continue  # 立即重新尝试识别
                 except Exception as e:
                     print(f"验证码处理异常: {e}")
                     self.driver.refresh()
                     retry_count += 1
+            print("达到最大重试次数，登录失败。")
+            return False
         except Exception as e:
             print(f"登录过程发生严重错误: {e}")
             return False
