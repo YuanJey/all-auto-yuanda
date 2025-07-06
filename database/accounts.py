@@ -13,10 +13,11 @@ class SCAccountState:
         self.state = state
         self.update_time = update_time
 class HXAccount:
-    def __init__(self,type,account, password):
+    def __init__(self,type,account, password,key):
         self.type = type
         self.account = account
         self.password = password
+        self.key = key
 class SCFailSummary:
     def __init__(self, account, fail_money,update_time):
         self.account = account

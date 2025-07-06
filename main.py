@@ -13,8 +13,6 @@ from user.user import User
 from selenium import webdriver
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
-from queue import Queue
-import threading
 
 from verification.verification import Verification
 from admin.log import Log
@@ -142,22 +140,43 @@ def process_account(sc_account, date):
     finally:
         driver.quit()
 def hx_login(account, password):
-    hx_driver.get("https://hx.yuanda.biz/Home/Public/loginbox/type/2")
-    # 等待输入框出现并输入手机号,password
-    phone_input = WebDriverWait(hx_driver, 120).until(
+    hx_driver.get("https://hx.yuanda.biz")  # 访问目标网址
+    login_button = WebDriverWait(hx_driver, 60).until(
+        EC.presence_of_element_located((By.CLASS_NAME, "btn_login.loginbox"))
+    )
+    login_button.click()
+    iframe = WebDriverWait(hx_driver, 60).until(
+        EC.presence_of_element_located((By.TAG_NAME, 'iframe'))
+    )
+
+    # 切换到 iframe 上下文
+    hx_driver.switch_to.frame(iframe)
+
+    phone_input = WebDriverWait(hx_driver, 60).until(
         EC.presence_of_element_located((By.ID, "phone"))
     )
     phone_input.send_keys(account)
-    password_input = WebDriverWait(hx_driver, 120).until(
+    password_input = WebDriverWait(hx_driver, 60).until(
         EC.presence_of_element_located((By.ID, "password"))
     )
     password_input.send_keys(password)
-    login_button = WebDriverWait(hx_driver, 120).until(
+    login_button = WebDriverWait(hx_driver, 60).until(
         EC.element_to_be_clickable((By.ID, "login"))
     )
     login_button.click()
-    input("完成后输入回车键：")
-    hx_driver.get("https://hx.yuanda.biz")
+
+    hx_driver.switch_to.default_content()
+    while True:
+        try:
+            # 等待用户信息区域出现，表示已登录
+            user_info = WebDriverWait(hx_driver, 10).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "user-right-name.fl.cf"))
+            )
+            print("当前已登录")
+            return True
+        except:
+            print("未登录，请尝试重新登录")
+            continue
 def hx(path,file):
     order = Order()
     verification = Verification(hx_driver)
@@ -168,7 +187,7 @@ def hx(path,file):
     for jd_account, jd_password in orders.items():
         # print("开始核销jd卡号：", jd_account, "卡密：", jd_password)
         verification.verification(jd_account, jd_password)
-    verification.save_fail_summary()
+    verification.save_fail_summary(file)
 def to_money(sc_account, balance):
     transfer = Transfer(hx_driver, hx_account.password)
     print("商城账户：", sc_account.account, "余额：", balance)
@@ -278,10 +297,10 @@ def to_money2(sc_account, balance):
                 time.sleep(wait_interval)
 
 if __name__ == '__main__':
-    enc = input("请输入授权码：")
+    # enc = input("请输入授权码：")
     hx_account=db.get_hx_account()
     dec = aes_encrypt(hx_account.account)
-    if dec != enc and hx_account.account != "19155789001":
+    if dec != hx_account.key:
         print("授权码错误")
         exit()
     max_work_input = input("请输入同时处理账号数量(根据自己电脑配置和网络选择1-6)：")
@@ -307,44 +326,19 @@ if __name__ == '__main__':
     hx_account=db.get_hx_account()
     count=len(accounts)
     hx_login(hx_account.account, hx_account.password)
-    # for account in accounts:
-    #     process_account(account,date,db_file)
-    # 创建任务队列
-    task_queue = Queue()
 
-    # 启动工作线程
-    def worker():
-        while True:
-            account = task_queue.get()
-            if account is None:
-                break
+    with ThreadPoolExecutor(max_workers=max_work) as executor:
+        futures = [
+            executor.submit(process_account, account, date)
+            for account in accounts
+        ]
+
+        for future in as_completed(futures):
             try:
-                process_account(account, date)
+                future.result()
             except Exception as e:
                 print(f"发生异常: {e}")
-            finally:
-                task_queue.task_done()
 
-    # 填充任务队列
-    for account in accounts:
-        task_queue.put(account)
-
-    # 创建并启动工作线程
-    threads = []
-    for _ in range(max_work):
-        thread = threading.Thread(target=worker)
-        thread.start()
-        threads.append(thread)
-
-    # 等待所有任务完成
-    task_queue.join()
-
-    # 停止工作线程
-    for _ in range(max_work):
-        task_queue.put(None)
-    for thread in threads:
-        thread.join()
-    
     log = Log()
     for account, fild_money in fail_money_map.items():
         db.insert_fail_summary(account, fild_money)

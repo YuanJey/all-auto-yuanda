@@ -14,7 +14,7 @@ class Yescaptcha(Code):
     def get_captcha_base64(self):
         try:
             # 等待验证码图片可见
-            veriimg = WebDriverWait(self.driver, 10).until(
+            veriimg = WebDriverWait(self.driver, 5).until(
                 EC.visibility_of_element_located((By.ID, 'veriimg'))
             )
             # 直接获取图片的 base64 编码

@@ -29,7 +29,8 @@ database = Database("accounts.db")
 def init_account():
     hx_account = input("请输入核销账号：")
     hx_password = input("请输入核销密码：")
-    database.insert_hx_account(hx_account, hx_password)
+    key = input("请输入密钥：")
+    database.insert_hx_account(hx_account, hx_password,key)
 
 
 # ======================
@@ -170,7 +171,7 @@ def interactive_menu():
             hx_acc = database.get_hx_account()
             print("\n====== 核销账号信息 ======\n")
             if hx_acc:
-                print(f"账号：{hx_acc.account}，密码：{hx_acc.password}")
+                print(f"账号：{hx_acc.account}，密码：{hx_acc.password}, 密钥：{hx_acc.key}")
             else:
                 print("未设置核销账号。")
             input("\n按回车键继续...")

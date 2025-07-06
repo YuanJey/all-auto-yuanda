@@ -168,7 +168,7 @@ def hx(path,file):
     for jd_account, jd_password in orders.items():
         # print("开始核销jd卡号：", jd_account, "卡密：", jd_password)
         verification.verification(jd_account, jd_password)
-    verification.save_fail_summary()
+    verification.save_fail_summary(file)
 def to_money(sc_account, balance):
     transfer = Transfer(hx_driver, hx_account.password)
     print("商城账户：", sc_account.account, "余额：", balance)

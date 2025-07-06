@@ -32,7 +32,8 @@ class Database:
              CREATE TABLE IF NOT EXISTS hx_accounts(
                 type INTEGER PRIMARY KEY,
                 account TEXT NOT NULL UNIQUE,
-                password TEXT)
+                password TEXT,
+                key TEXT)
         ''')
         ##每天失败金额统计
         self.cursor.execute('''
@@ -168,11 +169,11 @@ class Database:
     def complete_account_order(self, account):
         self.cursor.execute('UPDATE sc_account_order SET order_complete = 1 WHERE account = ?', (account,))
         self.conn.commit()
-    def insert_hx_account(self, account, password):
+    def insert_hx_account(self, account, password,key):
         self.cursor.execute('''
-            INSERT OR REPLACE INTO hx_accounts (account, type, password)
-            VALUES (?, ?, ?)
-        ''', (account, 1, password))
+            INSERT OR REPLACE INTO hx_accounts (account, type, password,key)
+            VALUES (?, ?, ?, ?)
+        ''', (account, 1, password,key))
         self.conn.commit()
     def get_hx_account(self):
         self.cursor.execute('SELECT * FROM hx_accounts WHERE type = 1')
