@@ -75,14 +75,14 @@ class  User:
                             return True
                         else:
                             print('登录失败，页面未跳转。刷新重试...')
-                            # self.driver.refresh()
+                            self.driver.refresh()
                     else:
                         print('验证码识别失败，刷新页面重试...')
-                        # self.driver.refresh()
+                        self.driver.refresh()
                         retry_count += 1
                 except Exception as e:
                     print(f"验证码处理异常: {e}")
-                    # self.driver.refresh()
+                    self.driver.refresh()
                     retry_count += 1
         except Exception as e:
             print(f"登录过程发生严重错误: {e}")
