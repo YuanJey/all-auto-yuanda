@@ -76,7 +76,7 @@ class Verification:
                     status = resp.get('status')
                     info = resp.get('info')
                     if status != 1:
-                        print(f"[失败] 核销失败: {info} - {jd_account}")
+                        print(f"[失败] 核销失败: {info} - {jd_password}")
                     else:
                         # print(f"[成功] 核销成功 - {jd_account}")
                         return True  # 成功直接返回
@@ -87,7 +87,7 @@ class Verification:
                 time.sleep(2)  # 延迟重试
                 continue
             except Exception as e:
-                print(f"[不可恢复异常] 核销出错: {e} - {jd_account}")
+                print(f"[不可恢复异常] 核销出错: {e} - {jd_account} {jd_password}")
                 break
             finally:
                 retry_count += 1
