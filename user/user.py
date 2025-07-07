@@ -24,13 +24,13 @@ class  User:
         self.cookie = cookie_dict
         return cookie_dict
     def login(self):
-        self.driver.get('https://sc.yuanda.biz/')
+        self.driver.get('https://sc.yuanda.biz/jingdian/User/index.html')
         try:
             # 点击登录按钮
-            login_btn = WebDriverWait(self.driver, 60).until(
-                EC.element_to_be_clickable((By.XPATH, '//div//ul//li//a[text()="登录"]'))
-            )
-            login_btn.click()
+            # login_btn = WebDriverWait(self.driver, 60).until(
+            #     EC.element_to_be_clickable((By.XPATH, '//div//ul//li//a[text()="登录"]'))
+            # )
+            # login_btn.click()
             # 循环处理验证码
             retry_count = 0
             while True:
