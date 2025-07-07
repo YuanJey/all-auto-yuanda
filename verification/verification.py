@@ -6,10 +6,11 @@ from datetime import datetime,timedelta
 
 
 class Verification:
-    def __init__(self, driver):
+    def __init__(self, driver,max_retries=10):
         self.driver = driver
         self.url = 'https://hx.yuanda.biz/Home/Card/writeOffCard'
         self.cookie = None
+        self.max_retries=max_retries
         # 新增：记录卡密核销成功次数
         self.fail_count = {}
 
@@ -93,7 +94,7 @@ class Verification:
                 retry_count += 1
 
         # 所有重试都失败后，保存失败订单
-        print(f"[最终失败] 已达最大重试次数，仍失败 - {jd_account}")
+        # print(f"[最终失败] 已达最大重试次数，仍失败 - {jd_account}")
         self.fail_count[jd_account] = jd_password
         return False
 
@@ -118,11 +119,11 @@ class Verification:
         file_path = os.path.join(log_dir, filename)
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         with open(file_path, "a", encoding="utf-8") as f:
-            f.write(f"===商城号:{acc} 核销统计时间: {timestamp} ===\n")
+            # f.write(f"===商城号:{acc} 核销统计时间: {timestamp} ===\n")
             for account, password in self.fail_count.items():
                 line = f"{account} {password}\n"
                 # print(line.strip())  # 控制台输出
                 f.write(line)
-            f.write("========================\n\n")
+            # f.write("========================\n\n")
 
 

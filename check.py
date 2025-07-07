@@ -8,8 +8,8 @@ from datetime import datetime, timedelta
 from database.database import Database
 from user.user import User
 from concurrent.futures import ThreadPoolExecutor, as_completed
-db_file = 'accounts.db'  # 提前准备好数据库文件路径
-db = Database(db_file)
+# db_file = 'accounts.db'  # 提前准备好数据库文件路径
+# db = Database(db_file)
 
 
 def check(sc_account):
@@ -42,8 +42,9 @@ def check(sc_account):
 
     finally:
         driver.quit()
-if __name__ == '__main__':
-    accounts = db.get_all_sc_account()
+
+def menu2_check(accounts):
+    # accounts = db.get_all_sc_account()
     with ThreadPoolExecutor(max_workers=2) as executor:
         futures = [
             executor.submit(check, account)
@@ -55,3 +56,16 @@ if __name__ == '__main__':
                 future.result()
             except Exception as e:
                 print(f"发生异常: {e}")
+# if __name__ == '__main__':
+#     accounts = db.get_all_sc_account()
+#     with ThreadPoolExecutor(max_workers=2) as executor:
+#         futures = [
+#             executor.submit(check, account)
+#             for account in accounts
+#         ]
+#
+#         for future in as_completed(futures):
+#             try:
+#                 future.result()
+#             except Exception as e:
+#                 print(f"发生异常: {e}")

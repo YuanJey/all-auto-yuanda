@@ -12,10 +12,9 @@ from database.database import Database
 from order.order import Order
 from verification.verification import Verification
 
-hx_driver = webdriver.Chrome()
 
 
-def hx_login(account, password):
+def hx_login(hx_driver,account, password):
     hx_driver.get("https://hx.yuanda.biz")  # 访问目标网址
 
     login_button = WebDriverWait(hx_driver, 60).until(
@@ -65,9 +64,9 @@ def hx_login(account, password):
         except:
             print("未登录，请尝试重新登录")
             continue
-def hx(path,file):
+def hx(hx_driver,path,file):
     order = Order()
-    verification = Verification(hx_driver)
+    verification = Verification(hx_driver,1)
     verification.set_cookie()
     order_files = path + "/" + file
     orders = order.get_orders_from_file(order_files)
@@ -75,7 +74,7 @@ def hx(path,file):
     for jd_account, jd_password in orders.items():
         # print("开始核销jd卡号：", jd_account, "卡密：", jd_password)
         verification.verification(jd_account, jd_password)
-    verification.save_fail_summary(file)
+    # verification.save_fail_summary(file)
 def get_txt_files(directory):
     """
     获取指定目录下的所有txt文件名，并以数组形式返回。
@@ -89,7 +88,9 @@ def get_txt_files(directory):
                 # txt_files.append(os.path.join(root, file))
                 txt_files.append(file)
     return txt_files
-if __name__ == '__main__':
+
+def menu2_hx(hx_account):
+    hx_driver = webdriver.Chrome()
     date = input("请输入核销的订单日期(例如:2025-06-18),回车默认为前一天：")
     if not date:
         current_date = datetime.now()
@@ -97,11 +98,29 @@ if __name__ == '__main__':
         previous_day = current_date - timedelta(days=1)
         # 格式化输出为字符串（格式为YYYY-MM-DD）
         date = previous_day.strftime("%Y-%m-%d")
-    db_file = 'accounts.db'  # 提前准备好数据库文件路径
-    db = Database(db_file)
-    hx_account = db.get_hx_account()
-    hx_login(hx_account.account,hx_account.password)
-    orders=get_txt_files(date)
+    # db_file = 'accounts.db'  # 提前准备好数据库文件路径
+    # db = Database(db_file)
+    # hx_account = db.get_hx_account()
+    hx_login(hx_driver,hx_account.account, hx_account.password)
+    orders = get_txt_files(date)
     with ThreadPoolExecutor(max_workers=6) as executor:  # 创建线程池，最大并发数为6
         for order in orders:
-            executor.submit(hx, date, order)  # 提交任务到线程池
+            executor.submit(hx, hx_driver,date, order)  # 提交任务到线程池
+
+
+# if __name__ == '__main__':
+#     date = input("请输入核销的订单日期(例如:2025-06-18),回车默认为前一天：")
+#     if not date:
+#         current_date = datetime.now()
+#         # 计算前一天的日期
+#         previous_day = current_date - timedelta(days=1)
+#         # 格式化输出为字符串（格式为YYYY-MM-DD）
+#         date = previous_day.strftime("%Y-%m-%d")
+#     db_file = 'accounts.db'  # 提前准备好数据库文件路径
+#     db = Database(db_file)
+#     hx_account = db.get_hx_account()
+#     hx_login(hx_account.account,hx_account.password)
+#     orders=get_txt_files(date)
+#     with ThreadPoolExecutor(max_workers=6) as executor:  # 创建线程池，最大并发数为6
+#         for order in orders:
+#             executor.submit(hx, date, order)  # 提交任务到线程池

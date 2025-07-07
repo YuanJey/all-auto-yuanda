@@ -28,6 +28,7 @@ db = Database(db_file)
 last_sc_account=db.get_last_sc_account()
 fail_money_map = {}
 sc_accounts_state = {}
+log = Log()
 def aes_encrypt(plaintext: str) -> str:
     cipher = AES.new(KEY, AES.MODE_ECB)
     ciphertext = cipher.encrypt(pad(plaintext.encode('utf-8'), BLOCK_SIZE))
@@ -86,6 +87,7 @@ def process_account(sc_account, date):
             buy.start2(int(balance))
             sc_accounts_state[sc_account.account]=buy.state
     finally:
+        log.add(hx_account.account, sc_account.account)
         driver.quit()
 def hx_login(account, password):
     hx_driver.get("https://hx.yuanda.biz")  # 访问目标网址
@@ -224,14 +226,9 @@ if __name__ == '__main__':
             except Exception as e:
                 print(f"发生异常: {e}")
 
-    log = Log()
     for account, fild_money in fail_money_map.items():
         db.insert_fail_summary(account, fild_money)
     for account, state in sc_accounts_state.items():
-        try:
-            if state <= 1:
-                log.add(hx_account.account, account)
-            db.insert_sc_account_state(account, state)
-        except Exception as e:
-            print(f"发生异常: {e}")
+        db.insert_sc_account_state(account, state)
+    print("所有账号处理完成！")
 

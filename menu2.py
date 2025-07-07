@@ -1,5 +1,6 @@
 import sys
 
+from check import menu2_check
 from database.accounts import SCAccount
 from database.database import Database
 from Crypto.Cipher import AES
@@ -12,6 +13,8 @@ from prompt_toolkit.layout.containers import Window, HSplit
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.styles import Style
+
+from hx import menu2_hx
 
 KEY = b'YourKey123456789'
 BLOCK_SIZE = 16
@@ -46,7 +49,9 @@ MENU_ITEMS = [
     "[5]. 获取核销账号信息",
     "[6]. 查询失败金额",
     "[7]. 查询商城账号状态",
-    "[8]. 退出程序"
+    "[8]. 再次核销订单",
+    "[9]. 检查今天订单",
+    "[10]. 退出程序"
 ]
 
 
@@ -122,7 +127,7 @@ def interactive_menu():
         if result is not None:
             choice = str(result)
         else:
-            choice = '8'
+            choice = '10'
 
         # 执行菜单逻辑
         if choice == "0":
@@ -206,8 +211,14 @@ def interactive_menu():
             for record in sc_accounts_state:
                 print(f"{record.account},更新时间: {record.update_time}")
             input("按回车键继续...")
-
         elif choice == "8":
+            hx_account=database.get_hx_account()
+            menu2_hx(hx_account)
+            input("按回车键继续...")
+        elif choice == "9":
+            menu2_check(database.get_all_sc_account())
+            input("按回车键继续...")
+        elif choice == "10":
             sys.exit(0)  # 强制退出整个程序
 
         else:
