@@ -1,4 +1,5 @@
 import os
+from concurrent.futures import ThreadPoolExecutor  # 导入线程池模块
 
 from selenium import webdriver
 from datetime import datetime, timedelta
@@ -6,6 +7,8 @@ from datetime import datetime, timedelta
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+
+from database.database import Database
 from order.order import Order
 from verification.verification import Verification
 
@@ -94,7 +97,11 @@ if __name__ == '__main__':
         previous_day = current_date - timedelta(days=1)
         # 格式化输出为字符串（格式为YYYY-MM-DD）
         date = previous_day.strftime("%Y-%m-%d")
-    hx_login("19155789001","Yuan970901")
+    db_file = 'accounts.db'  # 提前准备好数据库文件路径
+    db = Database(db_file)
+    hx_account = db.get_hx_account()
+    hx_login(hx_account.account,hx_account.password)
     orders=get_txt_files(date)
-    for order in orders:
-        hx(date,order)
+    with ThreadPoolExecutor(max_workers=6) as executor:  # 创建线程池，最大并发数为6
+        for order in orders:
+            executor.submit(hx, date, order)  # 提交任务到线程池
