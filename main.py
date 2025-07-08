@@ -92,10 +92,10 @@ def process_account(sc_account, date):
 def hx_login(account, password):
     hx_driver.get("https://hx.yuanda.biz")  # 访问目标网址
 
-    login_button = WebDriverWait(hx_driver, 60).until(
-        EC.presence_of_element_located((By.CLASS_NAME, "btn_login.loginbox"))
-    )
-    login_button.click()
+    # login_button = WebDriverWait(hx_driver, 60).until(
+    #     EC.presence_of_element_located((By.CLASS_NAME, "btn_login.loginbox"))
+    # )
+    # login_button.click()
 
     # 等待遮罩层消失（假设类名为 .layui-layer-shade）
     try:
