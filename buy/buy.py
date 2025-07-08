@@ -107,6 +107,9 @@ class  Buy:
 
     def handle(self, number):
         url = None
+        timeOut = 60
+        if number == 200:
+            timeOut = 10
         if number == 100:
             url = self.m_100
         elif number == 200:
@@ -119,26 +122,26 @@ class  Buy:
             url = self.m_2000
         try:
             self.driver.get(url)
-            buy_button = WebDriverWait(self.driver, 60).until(
+            buy_button = WebDriverWait(self.driver, timeOut).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.cart-buy > a.buy-btn'))
             )
             # 使用JavaScript点击
             self.driver.execute_script("arguments[0].click();", buy_button)
 
             # 找“找人代付”并点击
-            pay_button = WebDriverWait(self.driver, 60).until(
+            pay_button = WebDriverWait(self.driver, timeOut).until(
                 EC.element_to_be_clickable((By.ID, 'alipay'))
             )
             self.driver.execute_script("arguments[0].click();", pay_button)
 
             # 点击结算按钮
-            submit_btn = WebDriverWait(self.driver, 60).until(
+            submit_btn = WebDriverWait(self.driver, timeOut).until(
                 EC.element_to_be_clickable((By.ID, 'jiesuan'))
             )
             # 使用JavaScript点击
             self.driver.execute_script("arguments[0].click();", submit_btn)
 
-            success_message = WebDriverWait(self.driver, 60).until(
+            success_message = WebDriverWait(self.driver, timeOut).until(
                 EC.presence_of_element_located((By.ID, 'zhengwen'))
             )
             message_text = success_message.text
