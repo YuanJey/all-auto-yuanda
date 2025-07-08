@@ -161,6 +161,9 @@ def to_money2(sc_account, balance):
     with lock:
         while True:
             all_money = transfer.get_available_transfer_money()
+            if all_money <= 0:
+                print(f"等待中... 可转账金额 {all_money}")
+                hx_login(hx_account.account, hx_account.password)
             to_sc_account_money = 30000 - balance
             if all_money > to_sc_account_money:
                 transfer.transfer2(sc_account.account, to_sc_account_money)
