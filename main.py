@@ -200,7 +200,7 @@ if __name__ == '__main__':
     hx_account=db.get_hx_account()
     hx_login(hx_account.account, hx_account.password)
 
-    with ThreadPoolExecutor(max_workers=config.count) as executor:
+    with ThreadPoolExecutor(max_workers=int(config.count)) as executor:
         futures = [
             executor.submit(process_account, account, config.date)
             for account in accounts
