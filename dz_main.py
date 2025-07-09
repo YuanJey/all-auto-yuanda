@@ -71,14 +71,14 @@ class Transfer:
         except ValueError:
             print(f"无法解析可转账金额: {money_text}")
             return 0.0
-def process_account(sc_account, date):
+def process_account(sc_account):
     chrome_options = Options()
     driver = webdriver.Chrome(options=chrome_options)
     driver.maximize_window()
     try:
         user = User(driver, sc_account.account, sc_account.password)
         if user.login():
-            user.download_order(date)
+            # user.download_order(date)
             balance = user.get_balance()
             fail_money_map[sc_account.account]= balance
             to_money2(sc_account, balance)
@@ -187,9 +187,9 @@ if __name__ == '__main__':
     hx_account=db.get_hx_account()
     hx_login(hx_account.account, hx_account.password)
 
-    with ThreadPoolExecutor(max_workers=config.count) as executor:
+    with ThreadPoolExecutor(max_workers=int(config.count)) as executor:
         futures = [
-            executor.submit(process_account, account, config.date)
+            executor.submit(process_account, account)
             for account in accounts
         ]
 
@@ -198,5 +198,9 @@ if __name__ == '__main__':
                 future.result()
             except Exception as e:
                 print(f"发生异常: {e}")
+    for account, fild_money in fail_money_map.items():
+        db.insert_fail_summary(account, fild_money)
+    for account, state in sc_accounts_state.items():
+        db.insert_sc_account_state(account, state)
     print("所有账号核销完成，请检查check文件，如有失败订单，请手动核销！")
 
