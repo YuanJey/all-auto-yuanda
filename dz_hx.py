@@ -71,7 +71,7 @@ class Transfer:
         except ValueError:
             print(f"无法解析可转账金额: {money_text}")
             return 0.0
-def process_account(sc_account, date):
+def process_account_hx(sc_account, date):
     chrome_options = Options()
     # chrome_options.add_argument("--headless")  # 开启无头模式
     driver = webdriver.Chrome(options=chrome_options)
@@ -81,14 +81,6 @@ def process_account(sc_account, date):
         if user.login():
             user.download_order(date)
             hx(date, sc_account.account)
-            balance = user.get_balance()
-            fail_money_map[sc_account.account]= balance
-            to_money2(sc_account, balance)
-            buy = Buy(driver)
-            balance = user.get_balance()
-            buy.start2(int(balance))
-            sc_accounts_state[sc_account.account]=buy.state
-            log.add(hx_account.account, sc_account.account)
     finally:
         driver.quit()
 def hx_login(account, password):
@@ -153,41 +145,6 @@ def hx(path,file):
         verification.verification(jd_account, jd_password)
     verification.save_fail_summary(file)
 
-lock = threading.Lock()
-def to_money2(sc_account, balance):
-    transfer = Transfer(hx_driver, hx_account.password)
-    print("商城账户：", sc_account.account, "余额：", balance)
-    wait_timeout = 60 * 3  # 最大等待时间（秒）
-    wait_interval = 5  # 检查间隔（秒）
-    start_time = time.time()
-    with lock:
-        while True:
-            all_money = transfer.get_available_transfer_money()
-            if all_money <= 0:
-                print(f"等待中... 可转账金额 {all_money}")
-                hx_login(hx_account.account, hx_account.password)
-            to_sc_account_money = 30000 - balance
-            if all_money > to_sc_account_money:
-                transfer.transfer2(sc_account.account, to_sc_account_money)
-                break
-            elif last_sc_account.account == sc_account.account:
-                rounded_money = (all_money // 100) * 100
-                if rounded_money >= 100:
-                    transfer.transfer2(sc_account.account, rounded_money)
-                break
-            else:
-                print(
-                    f"账户余额不足 可转账金额 {all_money} 小于配置金额 {30000 - balance}，等待核销充值...")
-                if time.time() - start_time > wait_timeout:
-                    rounded_money = (all_money // 100) * 100
-                    if rounded_money >= 100:
-                        transfer.transfer2(sc_account.account, rounded_money)
-                        break
-                    else:
-                        print(f"等待超时，未满足转账条件: {sc_account.account}")
-                        break
-                time.sleep(wait_interval)
-
 if __name__ == '__main__':
     hx_account=db.get_hx_account()
     dec = aes_encrypt(hx_account.account)
@@ -195,14 +152,16 @@ if __name__ == '__main__':
         print("授权码错误")
         exit()
     config=db.get_sc_config()
+
     db.init_sc_accounts_state()
     accounts = db.get_all_sc_account()
     hx_account=db.get_hx_account()
+    count=len(accounts)
     hx_login(hx_account.account, hx_account.password)
 
     with ThreadPoolExecutor(max_workers=config.count) as executor:
         futures = [
-            executor.submit(process_account, account, config.date)
+            executor.submit(process_account_hx, account, config.date)
             for account in accounts
         ]
 
@@ -211,5 +170,10 @@ if __name__ == '__main__':
                 future.result()
             except Exception as e:
                 print(f"发生异常: {e}")
-    print("所有账号核销完成，请检查check文件，如有失败订单，请手动核销！")
+
+    for account, fild_money in fail_money_map.items():
+        db.insert_fail_summary(account, fild_money)
+    for account, state in sc_accounts_state.items():
+        db.insert_sc_account_state(account, state)
+    print("所有账号处理完成！")
 

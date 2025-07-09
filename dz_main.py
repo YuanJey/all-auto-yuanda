@@ -73,14 +73,12 @@ class Transfer:
             return 0.0
 def process_account(sc_account, date):
     chrome_options = Options()
-    # chrome_options.add_argument("--headless")  # 开启无头模式
     driver = webdriver.Chrome(options=chrome_options)
     driver.maximize_window()
     try:
         user = User(driver, sc_account.account, sc_account.password)
         if user.login():
             user.download_order(date)
-            hx(date, sc_account.account)
             balance = user.get_balance()
             fail_money_map[sc_account.account]= balance
             to_money2(sc_account, balance)
@@ -141,17 +139,6 @@ def hx_login(account, password):
         except:
             print("未登录，请尝试重新登录")
             continue
-def hx(path,file):
-    order = Order()
-    verification = Verification(hx_driver)
-    verification.set_cookie()
-    order_files = path + "/" + file + ".txt"
-    orders = order.get_orders_from_file(order_files)
-    print(file+"核销订单数量：", len(orders))
-    for jd_account, jd_password in orders.items():
-        # print("开始核销jd卡号：", jd_account, "卡密：", jd_password)
-        verification.verification(jd_account, jd_password)
-    verification.save_fail_summary(file)
 
 lock = threading.Lock()
 def to_money2(sc_account, balance):
