@@ -211,5 +211,9 @@ if __name__ == '__main__':
                 future.result()
             except Exception as e:
                 print(f"发生异常: {e}")
+    for account, fild_money in fail_money_map.items():
+        db.insert_fail_summary(account, fild_money)
+    for account, state in sc_accounts_state.items():
+        db.insert_sc_account_state(account, state)
     print("所有账号核销完成，请检查check文件，如有失败订单，请手动核销！")
 
