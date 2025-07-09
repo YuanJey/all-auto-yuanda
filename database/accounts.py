@@ -5,7 +5,11 @@ class SCAccount:
         self.account = account
         self.password = password
         self.login = login
-
+class SCConfig:
+    def __init__(self, type,count, date):
+        self.type = type
+        self.count = count
+        self.date = date
 
 class SCAccountState:
     def __init__(self, account,state,update_time):

@@ -1,12 +1,11 @@
 import sys
 
 from check import menu2_check
-from database.accounts import SCAccount
 from database.database import Database
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 import base64
-from prompt_toolkit import prompt
+from datetime import datetime, timedelta
 from prompt_toolkit.application import Application
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout.containers import Window, HSplit
@@ -51,7 +50,9 @@ MENU_ITEMS = [
     "[7]. 查询商城账号状态",
     "[8]. 再次核销订单",
     "[9]. 检查今天订单",
-    "[10]. 退出程序"
+    "[10]. 修改脚本配置",
+    "[11]. 查看脚本配置",
+    "[12]. 退出程序"
 ]
 
 
@@ -127,7 +128,7 @@ def interactive_menu():
         if result is not None:
             choice = str(result)
         else:
-            choice = '10'
+            choice = '12'
 
         # 执行菜单逻辑
         if choice == "0":
@@ -219,6 +220,29 @@ def interactive_menu():
             menu2_check(database.get_all_sc_account())
             input("按回车键继续...")
         elif choice == "10":
+            max_work_input = input("请输入同时处理账号数量(1-6)：")
+            try:
+                max_work = int(max_work_input)
+                if not (1 <= max_work <= 6):  # 限制范围
+                    print("输入超出范围，默认使用 2")
+                    max_work = 2
+            except ValueError:
+                print("输入无效，默认使用 2")
+                max_work = 2
+            date = input("请输入核销的订单日期(例如:2025-06-18),回车默认为前一天：")
+            if not date:
+                current_date = datetime.now()
+                # 计算前一天的日期
+                previous_day = current_date - timedelta(days=1)
+                # 格式化输出为字符串（格式为YYYY-MM-DD）
+                date = previous_day.strftime("%Y-%m-%d")
+            database.insert_sc_config(max_work, date)
+            input("按回车键继续...")
+        elif choice == "11":
+            config=database.get_sc_config()
+            print(f"当前配置为：最大处理账号数量为{config.count}，核销日期{config.date}")
+            input("按回车键继续...")
+        elif choice == "12":
             sys.exit(0)  # 强制退出整个程序
 
         else:

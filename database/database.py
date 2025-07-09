@@ -1,7 +1,7 @@
 import sqlite3
 from datetime import datetime
 
-from database.accounts import SCAccount, HXAccount, SCFailSummary, SCAccountState
+from database.accounts import SCAccount, HXAccount, SCFailSummary, SCAccountState, SCConfig
 
 
 class Database:
@@ -19,6 +19,13 @@ class Database:
                 account TEXT PRIMARY KEY,
                 password TEXT,
                 login BOOLEAN
+            )
+        ''')
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS sc_config (
+                type INTEGER PRIMARY KEY,
+                count TEXT,
+                date TEXT
             )
         ''')
         self.cursor.execute('''
@@ -180,6 +187,18 @@ class Database:
         row = self.cursor.fetchone()
         if row:
             return HXAccount(*row)
+        return None
+    def insert_sc_config(self, count, date):
+        self.cursor.execute('''
+            INSERT OR REPLACE INTO sc_config (count, type, date)
+            VALUES (?, ?, ?)
+        ''', (count, 1, date))
+        self.conn.commit()
+    def get_sc_config(self):
+        self.cursor.execute('SELECT * FROM sc_config WHERE type = 1')
+        row = self.cursor.fetchone()
+        if row:
+            return SCConfig(*row)
         return None
 # if __name__ == '__main__':
 #     db = Database("accounts.db")

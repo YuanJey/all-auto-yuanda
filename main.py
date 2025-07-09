@@ -24,6 +24,7 @@ KEY = b'YourKey123456789'  # 必须是 16、24 或 32 字节长度
 BLOCK_SIZE = 16  # AES block size
 db_file = 'accounts.db'  # 提前准备好数据库文件路径
 hx_driver = webdriver.Chrome()
+hx_driver.maximize_window()
 db = Database(db_file)
 last_sc_account=db.get_last_sc_account()
 fail_money_map = {}
@@ -74,6 +75,7 @@ def process_account(sc_account, date):
     chrome_options = Options()
     # chrome_options.add_argument("--headless")  # 开启无头模式
     driver = webdriver.Chrome(options=chrome_options)
+    driver.maximize_window()
     try:
         user = User(driver, sc_account.account, sc_account.password)
         if user.login():
@@ -86,8 +88,8 @@ def process_account(sc_account, date):
             balance = user.get_balance()
             buy.start2(int(balance))
             sc_accounts_state[sc_account.account]=buy.state
+            log.add(hx_account.account, sc_account.account)
     finally:
-        log.add(hx_account.account, sc_account.account)
         driver.quit()
 def hx_login(account, password):
     hx_driver.get("https://hx.yuanda.biz")  # 访问目标网址
@@ -187,29 +189,12 @@ def to_money2(sc_account, balance):
                 time.sleep(wait_interval)
 
 if __name__ == '__main__':
-    # enc = input("请输入授权码：")
     hx_account=db.get_hx_account()
     dec = aes_encrypt(hx_account.account)
     if dec != hx_account.key:
         print("授权码错误")
         exit()
-    max_work_input = input("请输入同时处理账号数量(根据自己电脑配置和网络选择1-6)：")
-    try:
-        max_work = int(max_work_input)
-        if not (1 <= max_work <= 6):  # 限制范围
-            print("输入超出范围，默认使用 2")
-            max_work = 2
-    except ValueError:
-        print("输入无效，默认使用 2")
-        max_work = 2
-    # max_work = 1
-    date = input("请输入核销的订单日期(例如:2025-06-18),回车默认为前一天：")
-    if not date:
-        current_date = datetime.now()
-        # 计算前一天的日期
-        previous_day = current_date - timedelta(days=1)
-        # 格式化输出为字符串（格式为YYYY-MM-DD）
-        date = previous_day.strftime("%Y-%m-%d")
+    config=db.get_sc_config()
 
     db.init_sc_accounts_state()
     accounts = db.get_all_sc_account()
@@ -217,9 +202,9 @@ if __name__ == '__main__':
     count=len(accounts)
     hx_login(hx_account.account, hx_account.password)
 
-    with ThreadPoolExecutor(max_workers=max_work) as executor:
+    with ThreadPoolExecutor(max_workers=config.count) as executor:
         futures = [
-            executor.submit(process_account, account, date)
+            executor.submit(process_account, account, config.date)
             for account in accounts
         ]
 
