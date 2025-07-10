@@ -1,3 +1,4 @@
+import sys
 import threading
 import time
 
@@ -88,7 +89,6 @@ def process_account(sc_account, date):
             balance = user.get_balance()
             buy.start2(int(balance))
             sc_accounts_state[sc_account.account]=buy.state
-            log.add(hx_account.account, sc_account.account)
     finally:
         driver.quit()
 def hx_login(account, password):
@@ -199,7 +199,7 @@ if __name__ == '__main__':
     accounts = db.get_all_sc_account()
     hx_account=db.get_hx_account()
     hx_login(hx_account.account, hx_account.password)
-
+    log.adds(hx_account.account, accounts)
     with ThreadPoolExecutor(max_workers=int(config.count)) as executor:
         futures = [
             executor.submit(process_account, account, config.date)
@@ -216,4 +216,5 @@ if __name__ == '__main__':
     for account, state in sc_accounts_state.items():
         db.insert_sc_account_state(account, state)
     print("所有账号核销完成，请检查check文件，如有失败订单，请手动核销！")
+    sys.exit(0)
 
