@@ -10,6 +10,6 @@ def aes_encrypt(plaintext: str) -> str:
     ciphertext = cipher.encrypt(pad(plaintext.encode('utf-8'), BLOCK_SIZE))
     return base64.b64encode(ciphertext).decode('utf-8')
 if __name__ == "__main__":
-    dec="17600090001"
+    dec="13234560001"
     aes_encrypt(dec)
     print(aes_encrypt(dec))
